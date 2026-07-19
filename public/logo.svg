@@ -1,0 +1,11 @@
+<svg width="260" height="64" viewBox="0 0 260 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="10" width="54" height="44" rx="16" fill="#0D3327"/>
+  <path d="M22 24C22 20.6863 24.6863 18 28 18H42C45.3137 18 48 20.6863 48 24V37C48 40.3137 45.3137 43 42 43H28C24.6863 43 22 40.3137 22 37V24Z" fill="#F7D36D"/>
+  <path d="M27 26H43" stroke="#0D3327" stroke-width="3" stroke-linecap="round"/>
+  <path d="M28 36H42" stroke="#0D3327" stroke-width="3" stroke-linecap="round"/>
+  <path d="M28 47L34 40" stroke="#F7D36D" stroke-width="3" stroke-linecap="round"/>
+  <path d="M42 47L36 40" stroke="#F7D36D" stroke-width="3" stroke-linecap="round"/>
+  <path d="M76 9H132" stroke="#D64F3A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M141 9H238" stroke="#F7D36D" stroke-width="4" stroke-linecap="round"/>
+  <text x="75" y="45" fill="#0D3327" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="900" letter-spacing="0">RailQuick</text>
+</svg>
