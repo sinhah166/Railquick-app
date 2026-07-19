@@ -223,9 +223,31 @@ function saveState() {
 // ===== NAVIGATION =====
 function navigateTo(pageId) {
   // Allow direct navigation to page-pnr always (both PNR check and Live train tabs live there)
+  const prevPage = appState.currentPage;
   const current = document.getElementById(appState.currentPage);
   const target = document.getElementById(pageId);
   if (!target || pageId === appState.currentPage) return;
+  
+  // Auto-reset profile edit form when leaving account page
+  if (prevPage === 'page-account') {
+    const editForm = document.getElementById('profile-edit-form');
+    const displaySection = document.getElementById('profile-display-section');
+    if (editForm && editForm.style.display !== 'none') {
+      editForm.style.display = 'none';
+      if (displaySection) displaySection.style.display = 'flex';
+      // Clear errors
+      const nameErr = document.getElementById('name-error');
+      const phoneErr = document.getElementById('phone-error');
+      const dobErr = document.getElementById('dob-error');
+      if (nameErr) nameErr.style.display = 'none';
+      if (phoneErr) phoneErr.style.display = 'none';
+      if (dobErr) dobErr.style.display = 'none';
+    }
+    // Also hide login screen overlay if visible
+    const loginOverlay = document.getElementById('railquick-login-screen');
+    if (loginOverlay) loginOverlay.style.display = 'none';
+  }
+  
   if (current) {
     current.classList.remove('active');
     current.classList.add('slide-out');
@@ -3879,21 +3901,204 @@ function syncClerkUser() {
 
 function signOut() {
   const clerk = clerkInstance || window.Clerk;
-  if (clerk) {
-    clerk.signOut().then(() => {
-      appState.user = null;
-      appState.orders = [];
-      saveState();
-      initAccountPage();
-      showToast('Signed out', 'info');
-    });
-  } else {
+  
+  function doLogout() {
     appState.user = null;
     appState.orders = [];
     saveState();
+    
+    // Clear custom profile data
+    localStorage.removeItem('railquick_custom_profile_name');
+    localStorage.removeItem('railquick_custom_profile_phone');
+    localStorage.removeItem('railquick_custom_profile_dob');
+    
+    // Reset profile display to defaults
+    const nameEl = document.getElementById('display-profile-name');
+    const detailsEl = document.getElementById('display-profile-details');
+    if (nameEl) nameEl.innerText = 'Your Name';
+    if (detailsEl) detailsEl.innerText = '+91 XXXXXXXXXX • DD/MM/YYYY';
+    
+    // Auto-cancel any open edit form
+    const editForm = document.getElementById('profile-edit-form');
+    const displaySection = document.getElementById('profile-display-section');
+    if (editForm) editForm.style.display = 'none';
+    if (displaySection) displaySection.style.display = 'flex';
+    
     initAccountPage();
-    showToast('Signed out', 'info');
+    showToast('Logged out successfully!', 'info');
+    
+    // Show the login screen on the account page
+    showLoginScreen();
   }
+  
+  if (clerk && typeof clerk.signOut === 'function') {
+    clerk.signOut().then(() => doLogout()).catch(() => doLogout());
+  } else {
+    doLogout();
+  }
+}
+
+function showLoginScreen() {
+  // Remove existing login screen if any
+  const existing = document.getElementById('railquick-login-screen');
+  if (existing) existing.remove();
+  
+  const accountPage = document.getElementById('page-account');
+  if (!accountPage) return;
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'railquick-login-screen';
+  overlay.style.cssText = 'position:absolute;inset:0;background:#0f1209;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:0 0 40px 0;';
+  
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:380px;padding:24px 20px;text-align:center;">
+      <!-- Logo & Welcome -->
+      <div style="margin-top:40px;margin-bottom:8px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#004D3C,#22c55e);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <span class="material-symbols-outlined" style="color:#fff;font-size:36px;">train</span>
+        </div>
+        <h2 style="color:#fff;font-size:24px;font-weight:900;font-family:'Outfit',sans-serif;margin:0;">Welcome to RailQuick</h2>
+        <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:6px;">Sign in to your account or create a new one</p>
+      </div>
+      
+      <!-- Login Form -->
+      <div style="margin-top:28px;text-align:left;">
+        <!-- Name -->
+        <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Full Name</label>
+        <input type="text" id="login-name" placeholder="Enter your name" maxlength="50"
+          style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:14px 16px;border-radius:14px;font-family:'Outfit',sans-serif;font-size:15px;margin-bottom:4px;box-sizing:border-box;outline:none;"
+          oninput="this.value = this.value.replace(/[^a-zA-Z\\s]/g, ''); validateLoginForm();">
+        <div id="login-name-error" style="color:#ef4444;font-size:11px;margin-bottom:12px;padding-left:4px;min-height:16px;"></div>
+        
+        <!-- Phone -->
+        <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Mobile Number</label>
+        <div style="display:flex;align-items:center;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);border-radius:14px;overflow:hidden;margin-bottom:4px;">
+          <span style="color:rgba(255,255,255,0.5);padding:14px 0 14px 16px;font-size:15px;font-weight:600;">+91</span>
+          <input type="tel" id="login-phone" placeholder="XXXXXXXXXX" maxlength="10"
+            style="flex:1;background:transparent;border:none;color:#fff;padding:14px 16px 14px 8px;font-size:15px;outline:none;box-sizing:border-box;"
+            oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateLoginForm();">
+        </div>
+        <div id="login-phone-error" style="color:#ef4444;font-size:11px;margin-bottom:12px;padding-left:4px;min-height:16px;"></div>
+        
+        <!-- DOB -->
+        <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Date of Birth <span style="color:rgba(255,255,255,0.3);">(optional)</span></label>
+        <input type="date" id="login-dob"
+          style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:14px 16px;border-radius:14px;font-size:14px;margin-bottom:24px;box-sizing:border-box;color-scheme:dark;outline:none;">
+        
+        <!-- Continue Button -->
+        <button id="login-continue-btn" onclick="handleLoginContinue()" disabled
+          style="width:100%;background:rgba(34,197,94,0.4);border:none;color:rgba(255,255,255,0.5);padding:16px;border-radius:14px;font-size:15px;font-weight:800;font-family:'Outfit',sans-serif;cursor:not-allowed;letter-spacing:0.5px;transition:all 0.3s ease;">
+          Continue
+        </button>
+
+        <!-- Skip Button -->
+        <button onclick="document.getElementById('railquick-login-screen').remove(); navigateTo('page-shop');"
+          style="width:100%;background:transparent;border:none;color:rgba(255,255,255,0.4);padding:16px;margin-top:8px;border-radius:14px;font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all 0.3s ease;">
+          Skip for now
+        </button>
+        
+        <!-- Terms -->
+        <p style="color:rgba(255,255,255,0.3);font-size:10px;text-align:center;margin-top:16px;line-height:1.6;">
+          By continuing, you agree to RailQuick's<br>
+          <span style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Terms of Service</span> & 
+          <span style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Privacy Policy</span>
+        </p>
+      </div>
+    </div>
+  `;
+  
+  accountPage.appendChild(overlay);
+}
+
+function validateLoginForm() {
+  const name = document.getElementById('login-name').value.trim();
+  const phone = document.getElementById('login-phone').value.trim();
+  const btn = document.getElementById('login-continue-btn');
+  const nameErr = document.getElementById('login-name-error');
+  const phoneErr = document.getElementById('login-phone-error');
+  let valid = true;
+  
+  // Name: min 2 chars, letters & spaces
+  if (name.length > 0 && name.length < 2) {
+    nameErr.innerText = 'Name must be at least 2 characters';
+    valid = false;
+  } else {
+    nameErr.innerText = '';
+  }
+  
+  // Phone: 10 digits, starts with 6-9
+  if (phone.length > 0 && phone.length < 10) {
+    phoneErr.innerText = 'Enter a valid 10-digit mobile number';
+    valid = false;
+  } else if (phone.length === 10 && !/^[6-9]/.test(phone)) {
+    phoneErr.innerText = 'Invalid mobile number';
+    valid = false;
+  } else {
+    phoneErr.innerText = '';
+  }
+  
+  // Both name (2+) and phone (10) are required
+  const isReady = valid && name.length >= 2 && phone.length === 10;
+  
+  if (isReady) {
+    btn.disabled = false;
+    btn.style.background = '#22c55e';
+    btn.style.color = '#fff';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.background = 'rgba(34,197,94,0.4)';
+    btn.style.color = 'rgba(255,255,255,0.5)';
+    btn.style.cursor = 'not-allowed';
+  }
+  return isReady;
+}
+
+function handleLoginContinue() {
+  if (!validateLoginForm()) return;
+  
+  const name = document.getElementById('login-name').value.trim();
+  const phone = document.getElementById('login-phone').value.trim();
+  const dobVal = document.getElementById('login-dob').value;
+  
+  // Format DOB
+  let displayDob = '';
+  if (dobVal) {
+    const parts = dobVal.split('-');
+    displayDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  const displayPhone = `+91 ${phone}`;
+  
+  // Save profile data
+  localStorage.setItem('railquick_custom_profile_name', name);
+  localStorage.setItem('railquick_custom_profile_phone', displayPhone);
+  localStorage.setItem('railquick_custom_profile_dob', displayDob);
+  
+  // Update profile display
+  const nameEl = document.getElementById('display-profile-name');
+  const detailsEl = document.getElementById('display-profile-details');
+  if (nameEl) nameEl.innerText = name;
+  if (detailsEl) detailsEl.innerText = `${displayPhone} • ${displayDob || 'No DOB'}`;
+  
+  // Set as logged in user (local session)
+  appState.user = {
+    name: name,
+    email: '',
+    phone: displayPhone,
+    avatarUrl: '',
+    avatar: name[0].toUpperCase(),
+    provider: 'local',
+    clerkId: 'local_' + phone,
+    loginAt: new Date().toISOString()
+  };
+  saveState();
+  initAccountPage();
+  
+  // Remove login screen
+  const loginScreen = document.getElementById('railquick-login-screen');
+  if (loginScreen) loginScreen.remove();
+  
+  showToast(`Welcome, ${name}! 🎉`, 'success');
 }
 
 // ===== PRODUCT MODAL DETAILS =====
@@ -4127,27 +4332,206 @@ function applyCouponCode(code) {
   initCartPage();
 }
 
-// Support Chat Bot
+// Support Chat Bot — Professional AI assistant
+const supportResponses = {
+  // Order related
+  'delayed|late|delay|train late': {
+    reply: "🚆 If your train is delayed, don't worry! Our delivery agents track live train schedules automatically. Your order will be delivered precisely when the train arrives at the station. No extra charges, no hassle!",
+    followUps: ['Can I reschedule delivery?', 'What if I miss the delivery?', 'Talk to a human']
+  },
+  'deliver|delivery|how.*deliver|seat|berth|coach': {
+    reply: "📦 Here's how delivery works:\n\n1️⃣ Enter your PNR & coach/seat details\n2️⃣ Our partner picks up your order at the delivery station\n3️⃣ They come directly to your coach & hand it to you at your seat/berth!\n\nYou'll get live tracking updates throughout.",
+    followUps: ['Which stations do you deliver to?', 'How long does delivery take?', 'Track my order']
+  },
+  'cancel|cancellation': {
+    reply: "❌ Cancellation Policy:\n\n• Before preparation: Full instant refund\n• Up to 1 hour before arrival: 90% refund\n• Less than 1 hour: Sorry, no cancellation\n\nGo to My Orders → Tap your order → Cancel Order",
+    followUps: ['How long for refund?', 'I want to modify my order', 'Talk to a human']
+  },
+  'where.*order|track.*order|order.*status|my order': {
+    reply: "📍 To track your order:\n\n1️⃣ Go to the Orders tab from bottom nav\n2️⃣ Find your order and tap 'Track'\n3️⃣ You'll see real-time GPS tracking of your delivery agent!\n\nOrder statuses: Confirmed → Preparing → Out for Delivery → Delivered",
+    followUps: ['Order not showing up', 'Delivery agent not moving', 'Call delivery agent']
+  },
+  'refund|money back|refund status': {
+    reply: "💰 Refund Information:\n\n• UPI/Wallet: 24-48 hours\n• Credit/Debit Card: 5-7 business days\n• Net Banking: 3-5 business days\n\nYou can check refund status in My Orders → Select order → Refund Status",
+    followUps: ['Refund not received', 'Wrong amount refunded', 'Talk to a human']
+  },
+  'payment|pay|upi|card|cod|cash': {
+    reply: "💳 Payment Methods Accepted:\n\n• UPI (GPay, PhonePe, Paytm)\n• Credit & Debit Cards (Visa, Mastercard, Rupay)\n• Net Banking (All major banks)\n• Wallets (Paytm, Amazon Pay)\n• Cash on Delivery (selected stations)\n\nAll transactions are secured with 256-bit encryption 🔒",
+    followUps: ['Payment failed but amount deducted', 'Can I change payment method?', 'Is COD available at my station?']
+  },
+  'payment fail|payment deduct|amount deduct|double charge': {
+    reply: "⚠️ If your payment was deducted but order wasn't placed:\n\n• The amount will be auto-refunded within 24-48 hours\n• If not received, go to My Orders → Payment Issues\n• Keep your transaction ID handy\n\nFor double charges, please contact us with the order ID and we'll resolve it immediately!",
+    followUps: ['Still not refunded', 'Share transaction ID', 'Talk to a human']
+  },
+  // PNR related
+  'pnr|pnr status|check pnr': {
+    reply: "🎫 To check your PNR status:\n\n1️⃣ Go to the PNR tab from the bottom navigation\n2️⃣ Enter your 10-digit PNR number\n3️⃣ Tap 'Check Status'\n\nYou'll see your booking status, coach, berth, and train schedule!",
+    followUps: ['PNR not working', 'What is a PNR?', 'Check live train status']
+  },
+  'station|which station|available station|deliver.*station': {
+    reply: "🏪 We currently deliver at 500+ major railway stations across India including:\n\n• Delhi (NDLS, DLI, ANVT)\n• Mumbai (CSMT, BCT, LTT)\n• Bangalore, Chennai, Kolkata, Hyderabad\n• Lucknow, Jaipur, Bhopal, Nagpur & more!\n\nEnter your PNR and we'll auto-detect your stations.",
+    followUps: ['Is my station available?', 'How to place an order?', 'Station timings']
+  },
+  // Food & quality
+  'quality|hygiene|safe|fresh|clean': {
+    reply: "✅ Food Quality & Safety:\n\n• FSSAI certified partner restaurants\n• Temperature-controlled packaging\n• Sealed & tamper-proof containers\n• Freshly prepared, never stored\n• Regular hygiene audits\n\nYour health is our top priority! 🛡️",
+    followUps: ['Report food quality issue', 'Allergen information', 'View restaurant ratings']
+  },
+  'allerg|vegetarian|veg|non.*veg|jain|halal|diet': {
+    reply: "🥗 Dietary Options:\n\n• Pure Veg ✅ • Non-Veg ✅ • Jain ✅\n• Egg-free options available\n• Allergen info shown on each product\n\nUse the filter on the Shop page to browse by dietary preference. If you have specific allergies, mention them in the order notes!",
+    followUps: ['Show me veg options', 'Is there a Jain menu?', 'Report allergy issue']
+  },
+  'cold|stale|bad food|wrong order|wrong item|missing item|spoiled': {
+    reply: "😔 We're really sorry about that! Here's what to do:\n\n1️⃣ Go to My Orders → Select the order\n2️⃣ Tap 'Report Issue'\n3️⃣ Select the problem & upload a photo\n\nWe'll process a full refund or replacement within 2 hours. Your satisfaction matters to us! 🙏",
+    followUps: ['I want a refund', 'I want a replacement', 'Talk to a human']
+  },
+  // Timings
+  'timing|time|hours|open|close|available.*time|when': {
+    reply: "⏰ Service Hours:\n\n• Ordering: 6:00 AM - 11:00 PM daily\n• Delivery: Based on your train schedule\n• Support: 24/7 available here!\n\nYou can place orders up to 2 hours before your train's arrival at the delivery station.",
+    followUps: ['Can I pre-order?', 'Midnight delivery?', 'Order for tomorrow']
+  },
+  'pre.*order|advance|tomorrow|schedule order': {
+    reply: "📅 Pre-ordering:\n\n• You can place orders up to 24 hours in advance!\n• Just enter your PNR, select items, and choose your delivery station\n• We'll prepare it fresh when the time comes\n\nPerfect for early morning trains! ☀️",
+    followUps: ['How to place order?', 'Can I modify pre-order?', 'Cancel pre-order']
+  },
+  // Offers
+  'coupon|discount|offer|promo|code': {
+    reply: "🎁 Current Offers:\n\n• RAIL50 — ₹50 off on orders above ₹299\n• CHAI20 — 20% off on beverages\n• FREEDEL — Free delivery on first order\n• RAIL100 — ₹100 off on orders above ₹499\n\n🎡 Also try our Spin the Wheel game for surprise coupons!",
+    followUps: ['How to apply coupon?', 'Coupon not working', 'Play Spin the Wheel']
+  },
+  'coupon not work|code not work|invalid coupon|expired': {
+    reply: "🔧 Coupon Troubleshooting:\n\n• Check if the coupon has expired\n• Verify minimum order amount is met\n• Each coupon can only be used once\n• Some coupons are for specific categories only\n\nIf it still doesn't work, share the coupon code and I'll check it for you!",
+    followUps: ['Share my coupon code', 'Show available offers', 'Talk to a human']
+  },
+  // Account
+  'account|profile|login|sign up|register|password': {
+    reply: "👤 Account Help:\n\n• Profile: Go to Account tab → Edit your details\n• Login Issues: Try clearing app cache & retry\n• Password: Use 'Forgot Password' on login screen\n• Delete Account: Contact support for account deletion\n\nYour data is protected under our privacy policy 🔐",
+    followUps: ['Can\'t login', 'Change phone number', 'Delete my account']
+  },
+  // Complaints
+  'complain|grievance|escalat|manager|senior|not happy|unsatisfied|worst': {
+    reply: "🙏 We're truly sorry for the inconvenience. Your feedback is very important to us.\n\n📞 To escalate:\n• Call: 1800-RAIL-QUICK (toll-free)\n• Email: grievance@railquick.in\n• Grievance Officer: Mr. Rahul Sharma\n• Response time: Within 24 hours\n\nWe'll make sure this gets resolved!",
+    followUps: ['Call customer care now', 'Email my complaint', 'Talk to a human']
+  },
+  'human|agent|real person|talk.*person|customer care|call': {
+    reply: "📞 Connect with our team:\n\n• Toll-free: 1800-RAIL-QUICK\n• WhatsApp: +91 98765-43210\n• Email: support@railquick.in\n• Available: 24/7\n\nAverage wait time: Under 2 minutes! Our team is ready to help you. 😊",
+    followUps: ['My issue is resolved', 'I have another question', 'Rate this chat']
+  },
+  // How to use
+  'how.*order|place.*order|how.*use|how.*work|order food|new here|first time': {
+    reply: "🛒 How to Order on RailQuick:\n\n1️⃣ Enter your PNR number on the Home page\n2️⃣ Browse products on the Shop tab\n3️⃣ Add items to cart\n4️⃣ Enter delivery details (coach/seat)\n5️⃣ Choose payment method & place order!\n\nYour food will be delivered right to your train seat! 🚂",
+    followUps: ['What items are available?', 'Payment methods?', 'Delivery charges?']
+  },
+  'delivery charge|shipping|delivery fee|free delivery': {
+    reply: "🚚 Delivery Charges:\n\n• Orders above ₹199: FREE delivery ✨\n• Orders below ₹199: ₹29 delivery fee\n• Use code FREEDEL for free delivery on your first order!\n\nNo hidden charges, ever!",
+    followUps: ['How to get free delivery?', 'Available offers', 'Place an order']
+  },
+  'minimum order|min order': {
+    reply: "📋 No minimum order required! You can order even a single item. However:\n\n• Free delivery on orders above ₹199\n• Best value combos start from ₹149\n• Bulk orders (10+) get special discounts\n\nOrder whatever you need! 😊",
+    followUps: ['Show me combos', 'Delivery charges?', 'Browse menu']
+  },
+  // Greetings
+  'hi|hello|hey|good morning|good evening|namaste|hola': {
+    reply: "Hello! 👋 Welcome to RailQuick Support! I'm here to help you with anything you need — orders, deliveries, train info, refunds, or just a quick question. What can I help you with today?",
+    followUps: ['Track my order', 'How to place order?', 'Available offers']
+  },
+  'thank|thanks|dhanyawaad|shukriya|awesome|great|perfect': {
+    reply: "You're welcome! 😊 Happy to help! Is there anything else I can assist you with? Have a wonderful journey! 🚂✨",
+    followUps: ['I have another question', 'Rate this chat', 'No, that\'s all']
+  },
+  'bye|goodbye|no.*that.*all|nothing else': {
+    reply: "Thank you for chatting with us! 🙏 Have an amazing journey! If you need help again, we're always here 24/7. Safe travels! 🚆✨",
+    followUps: ['Rate this chat', 'Back to home']
+  }
+};
+
+function getTimeString() {
+  const now = new Date();
+  let h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+function findBestResponse(text) {
+  const lower = text.toLowerCase();
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const [pattern, data] of Object.entries(supportResponses)) {
+    const keywords = pattern.split('|');
+    let score = 0;
+    for (const kw of keywords) {
+      if (kw.includes('.*')) {
+        // Regex pattern
+        try {
+          if (new RegExp(kw, 'i').test(lower)) score += 3;
+        } catch(e) { /* skip bad regex */ }
+      } else if (lower.includes(kw)) {
+        score += 2;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = data;
+    }
+  }
+
+  if (!bestMatch || bestScore === 0) {
+    return {
+      reply: "I appreciate your question! 🤔 I couldn't find an exact match, but here are some things I can help with:\n\n• Order tracking & delivery\n• Refunds & cancellations\n• PNR status & train info\n• Payment issues\n• Food quality & complaints\n\nTry rephrasing your question, or connect with our team directly!",
+      followUps: ['How to place order?', 'Track my order', 'Talk to a human']
+    };
+  }
+  return bestMatch;
+}
+
+function addFollowUpButtons(container, followUps) {
+  if (!followUps || followUps.length === 0) return;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flex items-start gap-2.5 max-w-[85%] mt-1';
+  wrapper.innerHTML = `
+    <div class="w-8 shrink-0"></div>
+    <div class="flex flex-wrap gap-1.5">
+      ${followUps.map(f => `<button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition-all" onclick="sendSupportMessage('${f.replace(/'/g, "\\'")}')">${f}</button>`).join('')}
+    </div>
+  `;
+  container.appendChild(wrapper);
+  container.scrollTop = container.scrollHeight;
+}
+
 function sendSupportMessage(text) {
   const container = document.getElementById('support-chat-messages');
   if (!container) return;
   
-  // User bubble
+  // User bubble with timestamp
   const userBubble = document.createElement('div');
   userBubble.className = 'flex items-start gap-2.5 max-w-[85%] ml-auto justify-end';
   userBubble.innerHTML = `
-    <div class="bg-primary text-white rounded-2xl p-3.5 shadow-sm text-xs font-semibold leading-relaxed">
-      ${text}
+    <div>
+      <div class="bg-primary text-white rounded-2xl p-3.5 shadow-sm text-xs font-semibold leading-relaxed">
+        ${text}
+      </div>
+      <div class="text-[9px] text-gray-400 text-right mt-1 mr-1">${getTimeString()}</div>
     </div>
   `;
   container.appendChild(userBubble);
   container.scrollTop = container.scrollHeight;
   
-  // Disable replies while typing
+  // Remove old follow-up buttons
+  container.querySelectorAll('.follow-up-btns').forEach(el => el.remove());
+  
+  // Disable input while typing
+  const inputEl = document.getElementById('chat-user-input');
+  const sendBtn = inputEl ? inputEl.nextElementSibling : null;
+  if (inputEl) { inputEl.disabled = true; inputEl.placeholder = 'Bot is typing...'; }
+  if (sendBtn) sendBtn.disabled = true;
+  
   const replies = document.getElementById('support-quick-replies');
   if (replies) replies.style.pointerEvents = 'none';
   
-  // Bot typing bubble
+  // Bot typing indicator
   const typingBubble = document.createElement('div');
   typingBubble.className = 'flex items-start gap-2.5 max-w-[85%]';
   typingBubble.innerHTML = `
@@ -4164,25 +4548,18 @@ function sendSupportMessage(text) {
     container.scrollTop = container.scrollHeight;
   }, 400);
   
-  // Bot response logic
+  // Find best response
+  const response = findBestResponse(text);
+  const typingDelay = 1200 + Math.random() * 1000;
+  
   setTimeout(() => {
     typingBubble.remove();
     if (replies) replies.style.pointerEvents = 'auto';
+    if (inputEl) { inputEl.disabled = false; inputEl.placeholder = 'Type a message...'; inputEl.focus(); }
+    if (sendBtn) sendBtn.disabled = false;
     
-    let replyText = "I'm checking on that for you. Can you please check your PNR status or contact our customer desk at 1800-RAIL-QUICK?";
-    if (text.includes('delayed')) {
-      replyText = "If your train is delayed, our delivery agents will automatically track the live train schedule and deliver your order precisely when the train arrives at the station. No hassle!";
-    } else if (text.includes('delivered')) {
-      replyText = "We partner with authorized catering services at stations. When the train pulls in, our delivery agent will come directly to your coach and hand the package to you at your seat/berth!";
-    } else if (text.includes('cancel')) {
-      replyText = "You can cancel your order up to 1 hour before the scheduled arrival of the train at your delivery station. Cancel options are available in the 'Orders' tab.";
-    } else if (text.includes('where') && text.includes('order')) {
-      replyText = 'You can track your order status in the My Orders tab. Tap the Track button next to your order to see real-time delivery updates with live GPS tracking.';
-    } else if (text.includes('refund')) {
-      replyText = 'Refund requests are processed within 5-7 business days. For orders cancelled before preparation, refunds are instant. Please check your payment method for the credited amount.';
-    } else if (text.includes('payment')) {
-      replyText = 'We accept UPI, credit/debit cards, net banking, and cash on delivery at selected stations. All transactions are secured with 256-bit encryption.';
-    }
+    // Format reply text — convert \n to <br>
+    const formattedReply = response.reply.replace(/\n/g, '<br>');
     
     const botBubble = document.createElement('div');
     botBubble.className = 'flex items-start gap-2.5 max-w-[85%]';
@@ -4190,13 +4567,37 @@ function sendSupportMessage(text) {
       <div class="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
         <span class="material-symbols-outlined text-sm">robot_2</span>
       </div>
-      <div class="bg-white border border-outline-variant/60 rounded-2xl p-3.5 shadow-sm text-xs font-medium text-on-surface leading-relaxed animate-fade-in-up">
-        ${replyText}
+      <div>
+        <div class="bg-white border border-outline-variant/60 rounded-2xl p-3.5 shadow-sm text-xs font-medium leading-relaxed animate-fade-in-up" style="color:#111;">
+          ${formattedReply}
+        </div>
+        <div class="text-[9px] text-gray-400 mt-1 ml-1 flex items-center gap-2">
+          ${getTimeString()}
+          <span class="inline-flex items-center gap-0.5 cursor-pointer hover:text-primary" onclick="this.innerHTML='👍 Helpful!'; this.style.pointerEvents='none';">
+            <span class="material-symbols-outlined" style="font-size:11px;">thumb_up</span> Helpful?
+          </span>
+        </div>
       </div>
     `;
     container.appendChild(botBubble);
     container.scrollTop = container.scrollHeight;
-  }, 1800);
+    
+    // Add follow-up suggestion buttons
+    if (response.followUps && response.followUps.length > 0) {
+      setTimeout(() => {
+        const followUpDiv = document.createElement('div');
+        followUpDiv.className = 'follow-up-btns flex items-start gap-2.5 max-w-[90%] mt-1';
+        followUpDiv.innerHTML = `
+          <div class="w-8 shrink-0"></div>
+          <div class="flex flex-wrap gap-1.5">
+            ${response.followUps.map(f => `<button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition-all" onclick="this.closest('.follow-up-btns').remove(); sendSupportMessage('${f.replace(/'/g, "\\'")}')">${f}</button>`).join('')}
+          </div>
+        `;
+        container.appendChild(followUpDiv);
+        container.scrollTop = container.scrollHeight;
+      }, 300);
+    }
+  }, typingDelay);
 }
 
 function sendCustomSupportMessage() {
@@ -4208,6 +4609,7 @@ function sendCustomSupportMessage() {
   sendSupportMessage(text);
   input.value = '';
 }
+
 
 // Lucky Wheel Game
 let isWheelSpinning = false;

@@ -3192,16 +3192,103 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
 
     <!-- Profile Edit Form (Hidden by default) -->
     <div id="profile-edit-form" style="display:none;flex-direction:column;align-items:center;padding:10px 24px 20px;width:100%;max-width:300px;margin:0 auto;">
-       <input type="text" id="edit-name-input" placeholder="Your Name" style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:12px;border-radius:12px;margin-bottom:10px;font-family:'Outfit',sans-serif;font-size:16px;">
-       <input type="text" id="edit-phone-input" placeholder="+91 XXXXXXXXXX" style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:12px;border-radius:12px;margin-bottom:10px;font-size:14px;">
-       <input type="text" id="edit-dob-input" placeholder="DD/MM/YYYY" style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:12px;border-radius:12px;margin-bottom:16px;font-size:14px;">
+       <!-- Name Input - letters & spaces only -->
+       <div style="width:100%;margin-bottom:10px;">
+         <input type="text" id="edit-name-input" placeholder="Your Name" maxlength="50"
+           style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:12px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:16px;box-sizing:border-box;"
+           oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); validateProfileForm();">
+         <div id="name-error" style="color:#ef4444;font-size:11px;margin-top:4px;display:none;padding-left:4px;"></div>
+       </div>
+
+       <!-- Phone Input - 10 digits only -->
+       <div style="width:100%;margin-bottom:10px;">
+         <div style="display:flex;align-items:center;background:#1e2a14;border:1px solid rgba(255,255,255,0.2);border-radius:12px;overflow:hidden;">
+           <span style="color:rgba(255,255,255,0.5);padding:12px 0 12px 12px;font-size:14px;white-space:nowrap;">+91</span>
+           <input type="tel" id="edit-phone-input" placeholder="XXXXXXXXXX" maxlength="10"
+             style="flex:1;background:transparent;border:none;color:#fff;padding:12px 12px 12px 6px;font-size:14px;outline:none;box-sizing:border-box;"
+             oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateProfileForm();">
+         </div>
+         <div id="phone-error" style="color:#ef4444;font-size:11px;margin-top:4px;display:none;padding-left:4px;"></div>
+       </div>
+
+       <!-- DOB Input - native date picker -->
+       <div style="width:100%;margin-bottom:16px;">
+         <input type="date" id="edit-dob-input"
+           style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:12px;border-radius:12px;font-size:14px;box-sizing:border-box;color-scheme:dark;"
+           onchange="validateProfileForm();">
+         <div id="dob-error" style="color:#ef4444;font-size:11px;margin-top:4px;display:none;padding-left:4px;"></div>
+       </div>
+
        <div style="display:flex;gap:10px;width:100%;">
-         <button onclick="cancelEditProfile()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:12px;border-radius:12px;cursor:pointer;font-weight:bold;">Cancel</button>
-         <button onclick="saveProfile()" style="flex:1;background:#22c55e;border:none;color:#fff;padding:12px;border-radius:12px;cursor:pointer;font-weight:bold;">Save</button>
+          <button onclick="cancelEditProfile()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:12px;border-radius:12px;cursor:pointer;font-weight:bold;">Cancel</button>
+          <button id="save-profile-btn" onclick="saveProfile()" style="flex:1;background:#22c55e;border:none;color:#fff;padding:12px;border-radius:12px;cursor:pointer;font-weight:bold;opacity:0.5;" disabled>Save</button>
        </div>
     </div>
 
     <script>
+      function validateProfileForm() {
+        const name = document.getElementById('edit-name-input').value.trim();
+        const phone = document.getElementById('edit-phone-input').value.trim();
+        const dobVal = document.getElementById('edit-dob-input').value;
+        const saveBtn = document.getElementById('save-profile-btn');
+        const nameErr = document.getElementById('name-error');
+        const phoneErr = document.getElementById('phone-error');
+        const dobErr = document.getElementById('dob-error');
+        let valid = true;
+
+        // Name validation: 2-50 chars, letters & spaces only
+        if (name.length > 0 && name.length < 2) {
+          nameErr.innerText = 'Name must be at least 2 characters';
+          nameErr.style.display = 'block';
+          valid = false;
+        } else {
+          nameErr.style.display = 'none';
+        }
+
+        // Phone validation: exactly 10 digits, must start with 6-9
+        if (phone.length > 0 && phone.length < 10) {
+          phoneErr.innerText = 'Phone number must be 10 digits';
+          phoneErr.style.display = 'block';
+          valid = false;
+        } else if (phone.length === 10 && !/^[6-9]/.test(phone)) {
+          phoneErr.innerText = 'Invalid phone number';
+          phoneErr.style.display = 'block';
+          valid = false;
+        } else {
+          phoneErr.style.display = 'none';
+        }
+
+        // DOB validation: age between 5 and 120
+        if (dobVal) {
+          const dob = new Date(dobVal);
+          const today = new Date();
+          let age = today.getFullYear() - dob.getFullYear();
+          const m = today.getMonth() - dob.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+          if (age < 5 || age > 120) {
+            dobErr.innerText = 'Please enter a valid date of birth';
+            dobErr.style.display = 'block';
+            valid = false;
+          } else {
+            dobErr.style.display = 'none';
+          }
+        } else {
+          dobErr.style.display = 'none';
+        }
+
+        // At least one field must be filled
+        const hasData = name.length >= 2 || phone.length === 10 || dobVal;
+
+        if (valid && hasData) {
+          saveBtn.disabled = false;
+          saveBtn.style.opacity = '1';
+        } else {
+          saveBtn.disabled = true;
+          saveBtn.style.opacity = '0.5';
+        }
+        return valid;
+      }
+
       function editProfile() {
         document.getElementById('profile-display-section').style.display = 'none';
         document.getElementById('profile-edit-form').style.display = 'flex';
@@ -3211,29 +3298,65 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         
         document.getElementById('edit-name-input').value = (name === 'Your Name') ? '' : name;
         
-        const phone = details[0] ? details[0].trim() : '';
-        document.getElementById('edit-phone-input').value = (phone === '+91 XXXXXXXXXX' || phone === 'No Phone') ? '' : phone;
+        const phone = details[0] ? details[0].trim().replace('+91 ', '').replace('+91', '') : '';
+        document.getElementById('edit-phone-input').value = (phone === 'XXXXXXXXXX' || phone === 'No Phone') ? '' : phone;
         
         const dob = details[1] ? details[1].trim() : '';
-        document.getElementById('edit-dob-input').value = (dob === 'DD/MM/YYYY' || dob === 'No DOB') ? '' : dob;
+        // Convert DD/MM/YYYY to YYYY-MM-DD for date input
+        if (dob && dob !== 'DD/MM/YYYY' && dob !== 'No DOB') {
+          const parts = dob.split('/');
+          if (parts.length === 3) {
+            document.getElementById('edit-dob-input').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+          } else {
+            document.getElementById('edit-dob-input').value = '';
+          }
+        } else {
+          document.getElementById('edit-dob-input').value = '';
+        }
+        
+        validateProfileForm();
+
+        // Scroll to the edit form smoothly so it doesn't jump to top
+        setTimeout(() => {
+          document.getElementById('profile-edit-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
       }
 
       function cancelEditProfile() {
         document.getElementById('profile-edit-form').style.display = 'none';
         document.getElementById('profile-display-section').style.display = 'flex';
+        // Clear error messages
+        document.getElementById('name-error').style.display = 'none';
+        document.getElementById('phone-error').style.display = 'none';
+        document.getElementById('dob-error').style.display = 'none';
+        // Scroll back to profile display section
+        setTimeout(() => {
+          document.getElementById('profile-display-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
       }
 
       function saveProfile() {
-        const newName = document.getElementById('edit-name-input').value;
-        const newPhone = document.getElementById('edit-phone-input').value;
-        const newDob = document.getElementById('edit-dob-input').value;
+        if (!validateProfileForm()) return;
+
+        const newName = document.getElementById('edit-name-input').value.trim();
+        const newPhone = document.getElementById('edit-phone-input').value.trim();
+        const dobVal = document.getElementById('edit-dob-input').value;
         
-        document.getElementById('display-profile-name').innerText = newName || 'User Name';
-        document.getElementById('display-profile-details').innerText = `${newPhone || 'No Phone'} • ${newDob || 'No DOB'}`;
+        // Format DOB from YYYY-MM-DD to DD/MM/YYYY for display
+        let displayDob = '';
+        if (dobVal) {
+          const parts = dobVal.split('-');
+          displayDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        const displayPhone = newPhone ? `+91 ${newPhone}` : '';
+        
+        document.getElementById('display-profile-name').innerText = newName || 'Your Name';
+        document.getElementById('display-profile-details').innerText = `${displayPhone || 'No Phone'} • ${displayDob || 'No DOB'}`;
         
         localStorage.setItem('railquick_custom_profile_name', newName);
-        localStorage.setItem('railquick_custom_profile_phone', newPhone);
-        localStorage.setItem('railquick_custom_profile_dob', newDob);
+        localStorage.setItem('railquick_custom_profile_phone', displayPhone);
+        localStorage.setItem('railquick_custom_profile_dob', displayDob);
         
         cancelEditProfile();
       }
@@ -3250,6 +3373,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         }
       }, 300);
     </script>
+
 
     <!-- 3 Cards -->
     <div style="display:flex;gap:10px;padding:0 16px 24px;">
@@ -3414,7 +3538,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         <div class="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 animate-pulse">
           <span class="material-symbols-outlined text-sm">robot_2</span>
         </div>
-        <div class="bg-white border border-outline-variant/60 rounded-2xl p-3.5 shadow-sm text-xs font-medium text-on-surface leading-relaxed">
+        <div class="bg-white border border-outline-variant/60 rounded-2xl p-3.5 shadow-sm text-xs font-medium leading-relaxed" style="color:#111;">
           Hi there! 👋 I'm your RailQuick AI assistant. I can help with orders, deliveries, train schedules, refunds and more. How can I help you today?
         </div>
       </div>
@@ -3422,13 +3546,16 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
     
     <!-- Quick reply buttons -->
     <div class="p-4 bg-white border-t border-outline-variant/40 space-y-2 shrink-0 pb-1">
-      <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 px-1">Suggested Questions</div>
+      <div class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 px-1">Quick Help Topics</div>
       <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none" id="support-quick-replies">
-        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('What if my train is delayed?')">Delayed Train?</button>
-        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('How is food delivered to my seat?')">How is it delivered?</button>
-        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('Can I cancel my order?')">Can I cancel?</button>
-        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('Where is my order?')">Where's my order?</button>
-        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('What is my refund status?')">Refund status</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('How to place an order?')">📦 How to order?</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('Where is my order?')">📍 Track order</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('What if my train is delayed?')">🚆 Train delayed?</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('Can I cancel my order?')">❌ Cancel order</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('What is my refund status?')">💰 Refund status</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('What payment methods do you accept?')">💳 Payments</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('What are the available offers?')">🎁 Offers</button>
+        <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold px-3.5 py-2 rounded-xl shrink-0 active:scale-95 transition-all" onclick="sendSupportMessage('Talk to a human agent')">👤 Talk to human</button>
       </div>
     </div>
     
