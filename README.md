@@ -5,7 +5,8 @@
   **Your ultimate in-journey train delivery & assistance platform**
   
   [![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
-  [![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E.svg)](https://supabase.com/)
+  [![Supabase Database](https://img.shields.io/badge/Database-Supabase-3ECF8E.svg)](https://supabase.com/)
+  [![Supabase Auth](https://img.shields.io/badge/Auth-Supabase-3ECF8E.svg)](https://supabase.com/auth)
   [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 </div>
 
@@ -39,7 +40,7 @@ The current application serves as a comprehensive **Waitlist and Early Access Po
 * **Frontend**: HTML5, Vanilla JavaScript, CSS3 (Tailwind-inspired utility structure)
 * **Backend**: Node.js (Core `http` module for routing and API handling)
 * **Database & Auth**: 
-  * [Supabase](https://supabase.com/) (PostgreSQL & Waitlist Management)
+  * [Supabase](https://supabase.com/) (PostgreSQL, Waitlist Management & Authentication)
 * **Email Service**: [Resend](https://resend.com/) (Transactional emails for the Waitlist)
 
 ---
