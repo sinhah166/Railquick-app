@@ -29,7 +29,7 @@ let appState = {
   themeMode: localStorage.getItem('theme-mode') || 'dark'
 };
 
-let clerkInstance = null;
+
 
 // ===== PRODUCTS DATABASE =====
 const PRODUCTS = [
@@ -211,10 +211,10 @@ function saveState() {
       currentPage: appState.currentPage,
       hasOnboarded: appState.hasOnboarded
     }));
-    if (appState.user && appState.user.clerkId) {
-      localStorage.setItem(`railquick_orders_${appState.user.clerkId}`, JSON.stringify(appState.orders));
+    if (appState.user && appState.user.email) {
+      localStorage.setItem(`railquick_orders_${appState.user.email}`, JSON.stringify(appState.orders));
       if (appState.user.phone) {
-        localStorage.setItem(`railquick_phone_${appState.user.clerkId}`, appState.user.phone);
+        localStorage.setItem(`railquick_phone_${appState.user.email}`, appState.user.phone);
       }
     }
   } catch(e) {}
@@ -3340,7 +3340,7 @@ function goToPayment() {
   if (appState.user) {
     appState.user.name = name;
     appState.user.phone = phone;
-    localStorage.setItem(`railquick_phone_${appState.user.clerkId || 'guest'}`, phone);
+    localStorage.setItem(`railquick_phone_${appState.user.email || 'guest'}`, phone);
     saveState();
   }
   
@@ -3714,7 +3714,7 @@ function initAccountPage() {
 
   if (appState.user) {
     if (!appState.user.phone) {
-      const savedPhone = localStorage.getItem(`railquick_phone_${appState.user.clerkId || 'guest'}`) || localStorage.getItem('railquick_global_phone');
+      const savedPhone = localStorage.getItem(`railquick_phone_${appState.user.email || 'guest'}`) || localStorage.getItem('railquick_global_phone');
       if (savedPhone) {
         appState.user.phone = savedPhone;
         saveState();
@@ -3775,11 +3775,8 @@ function initAccountPage() {
       }
     }
     // Unmount Clerk sign-in if it was mounted
-    const mountEl = document.getElementById('clerk-sign-in-mount');
-    if (mountEl && typeof clerkInstance !== 'undefined' && clerkInstance) {
-      try { clerkInstance.unmountSignIn(mountEl); } catch(e) {}
-      mountEl.innerHTML = '';
-    }
+    const loginSec = document.getElementById('account-login-section');
+    if (loginSec) loginSec.innerHTML = '';
   } else { 
     if (login) login.classList.remove('hidden'); 
     if (logged) logged.classList.add('hidden');
@@ -3787,36 +3784,7 @@ function initAccountPage() {
     if (authBtnText) authBtnText.innerText = "Login";
     if (authBtnIcon) authBtnIcon.innerText = "login";
     
-    // Mount Clerk's embedded sign-in form
-    const mountEl = document.getElementById('clerk-sign-in-mount');
-    if (mountEl && clerkInstance && clerkInitDone) {
-      if (!mountEl.querySelector('.cl-rootBox') && !mountEl.querySelector('.cl-component')) {
-        mountEl.innerHTML = '';
-        try {
-          clerkInstance.mountSignIn(mountEl, {
-            appearance: {
-              elements: {
-                rootBox: 'w-full',
-                card: 'shadow-none border-0 p-0 w-full max-w-sm mx-auto bg-transparent',
-                formButtonPrimary: 'bg-[#004D3C] hover:bg-[#006A4E]',
-              }
-            }
-          });
-        } catch(e) {
-          console.warn('[Clerk] Embedded mount failed, fallback to button:', e);
-          mountEl.innerHTML = `
-            <div class="w-full p-1 space-y-4">
-              <button onclick="triggerClerkSignIn()" class="w-full bg-[#004D3C] hover:bg-[#006A4E] text-white py-4 px-6 rounded-2xl font-headline font-bold active:scale-95 transition-all uppercase tracking-wider text-xs shadow-md flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-lg">login</span>
-                Sign In with Clerk
-              </button>
-            </div>
-          `;
-        }
-      }
-    } else if (mountEl && !clerkInstance) {
-      showClerkFallback();
-    }
+    showFallbackLoginForm();
   }
 }
 
@@ -3923,7 +3891,7 @@ function syncClerkUser() {
       phone: savedPhone,
       avatarUrl: user.imageUrl || '',
       avatar: (user.fullName || user.firstName || 'U')[0].toUpperCase(),
-      provider: 'clerk',
+      provider: 'local',
       clerkId: user.id,
       loginAt: new Date().toISOString()
     };
@@ -5303,155 +5271,10 @@ function startCustomerMarquee() {
   requestAnimationFrame(step);
 }
 
-// ===== CLERK AUTHENTICATION =====
-// Robust initialization with script load detection and error recovery.
+// Authentication Logic removed
 
-let clerkInitDone = false;
-
-function setupClerkListeners(clerk) {
-  if (!clerk || clerkInitDone) return;
-  clerkInitDone = true;
-  clerkInstance = clerk;
-  console.log('[Clerk] Ready. Signed in:', clerk.user?.fullName || 'Not signed in');
-
-  // Sync the current session state immediately
-  syncClerkUser();
-
-  // React to sign-in / sign-out events
-  clerk.addListener(({ user }) => {
-    // Clear logging in flag and spinner since Clerk loaded the session
-    localStorage.removeItem('railquick_logging_in');
-    hideLoading();
-
-    const wasSignedIn = !!appState.user;
-    const isNowSignedIn = !!user;
-
-    if (isNowSignedIn) {
-      const savedPhone = localStorage.getItem(`railquick_phone_${user.id}`) || user.primaryPhoneNumber?.phoneNumber || localStorage.getItem('railquick_last_phone') || '';
-      const savedOrdersStr = localStorage.getItem(`railquick_orders_${user.id}`);
-      if (savedOrdersStr) {
-        try {
-          appState.orders = JSON.parse(savedOrdersStr);
-        } catch(e) {}
-      }
-      appState.user = {
-        name: user.fullName || user.firstName || user.username || 'User',
-        email: user.primaryEmailAddress?.emailAddress || '',
-        phone: savedPhone,
-        avatarUrl: user.imageUrl || '',
-        avatar: (user.fullName || user.firstName || 'U')[0].toUpperCase(),
-        provider: 'clerk',
-        clerkId: user.id,
-        loginAt: new Date().toISOString()
-      };
-      if (savedPhone) {
-        localStorage.setItem(`railquick_phone_${user.id}`, savedPhone);
-      }
-    } else {
-      appState.user = null;
-      appState.orders = [];
-    }
-    saveState();
-
-    if (!wasSignedIn && isNowSignedIn) {
-      closeGoogleLoginModal();
-      showToast(`Welcome, ${appState.user.name}!`);
-      initAccountPage();
-      
-      // If phone number is missing, auto-open profile page to mandate verification
-      if (!appState.user.phone) {
-        setTimeout(() => {
-          navigateTo('page-account');
-          showToast('Please add your mobile number to complete profile', 'warning');
-        }, 800);
-      } else if (appState.cart.length > 0) {
-        setTimeout(() => { navigateTo('page-checkout'); initCheckoutPage(); }, 800);
-      } else {
-        setTimeout(() => navigateTo('page-shop'), 800);
-      }
-    } else if (wasSignedIn && !isNowSignedIn) {
-      showToast('Signed out', 'info');
-      initAccountPage();
-    } else {
-      initAccountPage();
-    }
-  });
-
-  // Remove loading state from mount area
-  const mountEl = document.getElementById('clerk-sign-in-mount');
-  if (mountEl) {
-    const loadingEl = mountEl.querySelector('.clerk-loading-state');
-    if (loadingEl) loadingEl.remove();
-  }
-
-  // If we're currently on the account page, re-init it now that Clerk is ready
-  if (appState.currentPage === 'page-account') {
-    initAccountPage();
-  }
-}
-
-const CLERK_PUBLISHABLE_KEY = 'pk_test_c21vb3RoLWphY2thbC0xOC5jbGVyay5hY2NvdW50cy5kZXYk';
-
-// Initialize Clerk: wait for the script, call .load() to boot SDK, then set up listeners
-async function initClerk() {
-  if (clerkInstance && clerkInitDone) return;
-
-  let clerk = window.Clerk;
-  
-  // Wait up to 10 seconds for the Clerk script to load from the CDN
-  let attempts = 0;
-  while (!clerk && attempts < 50) {
-    await new Promise(r => setTimeout(r, 200));
-    clerk = window.Clerk;
-    attempts++;
-  }
-
-  if (!clerk) {
-    console.error('[Clerk] Failed to load Clerk script from CDN.');
-    showClerkFallback();
-    return;
-  }
-
-  // Check if window.Clerk is the class constructor (common in NPM build environments) or an instance
-  if (typeof clerk === 'function') {
-    console.log('[Clerk] Instantiating Clerk class...');
-    try {
-      clerk = new clerk(CLERK_PUBLISHABLE_KEY);
-      window.Clerk = clerk;
-    } catch (e) {
-      console.error('[Clerk] Failed to instantiate Clerk class:', e);
-      showClerkFallback();
-      return;
-    }
-  }
-
-  try {
-    if (!clerkInitDone) {
-      console.log('[Clerk] Calling clerk.load()...');
-      await clerk.load({
-        publishableKey: CLERK_PUBLISHABLE_KEY,
-        appearance: {
-          elements: {
-            rootBox: 'w-full',
-            card: 'shadow-none border-0 p-0 w-full max-w-sm mx-auto bg-transparent',
-            formButtonPrimary: 'bg-[#004D3C] hover:bg-[#006A4E]',
-          }
-        }
-      });
-    }
-    clerkInstance = clerk;
-    console.log('[Clerk] Loaded successfully. User:', clerk.user?.fullName || 'Not signed in');
-    setupClerkListeners(clerk);
-  } catch (err) {
-    console.error('[Clerk] load() failed:', err);
-    showClerkFallback();
-  }
-}
-
-
-
-function showClerkFallback() {
-  const mountEl = document.getElementById('clerk-sign-in-mount');
+function showFallbackLoginForm() {
+  const mountEl = document.getElementById('account-login-section');
   if (mountEl) {
     mountEl.innerHTML = `
       <div style="background:#16220f; border:1px solid rgba(255,255,255,0.06); border-radius:24px; padding:24px; box-shadow:0 12px 40px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:18px; text-align:left;">
@@ -5481,12 +5304,12 @@ function showClerkFallback() {
         </div>
         
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
-          <button onclick="handleFallbackLoginSubmit()" style="width:100%; background:#22c55e; color:#ffffff; border:none; border-radius:12px; padding:12px 0; font-size:12.5px; font-weight:800; text-transform:uppercase; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <button onclick="handleLoginSubmit()" style="width:100%; background:#22c55e; color:#ffffff; border:none; border-radius:12px; padding:12px 0; font-size:12.5px; font-weight:800; text-transform:uppercase; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
             <span class="material-symbols-outlined" style="font-size:16px;">login</span>
             Sign In / Log In
           </button>
           
-          <button onclick="handleFallbackLoginSubmit()" style="width:100%; background:transparent; border:1.5px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.85); border-radius:12px; padding:11px 0; font-size:12.5px; font-weight:800; text-transform:uppercase; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+          <button onclick="handleLoginSubmit()" style="width:100%; background:transparent; border:1.5px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.85); border-radius:12px; padding:11px 0; font-size:12.5px; font-weight:800; text-transform:uppercase; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
             <span class="material-symbols-outlined" style="font-size:16px;">person_add</span>
             Create New Account
           </button>
@@ -5496,7 +5319,7 @@ function showClerkFallback() {
   }
 }
 
-function handleFallbackLoginSubmit() {
+function handleLoginSubmit() {
   const nameInput = document.getElementById('fallback-login-name');
   const emailInput = document.getElementById('fallback-login-email');
   const phoneInput = document.getElementById('fallback-login-phone');
@@ -5523,12 +5346,12 @@ function handleFallbackLoginSubmit() {
       phone: '+91 ' + phone,
       avatarUrl: "",
       avatar: name[0].toUpperCase(),
-      provider: "clerk",
+      provider: "local",
       clerkId: "clerk_usr_" + Math.random().toString(36).substr(2, 9),
       loginAt: new Date().toISOString()
     };
     
-    localStorage.setItem(`railquick_phone_${appState.user.clerkId}`, appState.user.phone);
+    localStorage.setItem(`railquick_phone_${appState.user.email}`, appState.user.phone);
     saveState();
     hideLoading();
     showToast(`Signed in successfully as ${name}!`);
@@ -5545,38 +5368,6 @@ function handleFallbackLoginSubmit() {
   }, 1200);
 }
 
-function retryClerkInit() {
-  const mountEl = document.getElementById('clerk-sign-in-mount');
-  if (mountEl) {
-    mountEl.innerHTML = `
-      <div class="clerk-loading-state flex flex-col items-center justify-center py-8 gap-4">
-        <div class="w-10 h-10 border-[3px] border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p class="text-xs text-gray-400 font-medium">Reconnecting...</p>
-      </div>
-    `;
-  }
-  
-  // Reset flags for retry
-  clerkInitDone = false;
-  window.__clerkScriptFailed = false;
-  window.Clerk = null;
-  
-  // Remove existing scripts to allow clean reload
-  const oldScripts = document.querySelectorAll('script[src*="clerk"]');
-  oldScripts.forEach(s => s.remove());
-  
-  // Re-inject primary CDN script
-  const script = document.createElement('script');
-  script.async = true;
-script.crossOrigin = 'anonymous';
-  script.setAttribute('data-clerk-publishable-key', CLERK_PUBLISHABLE_KEY);
-  script.src = 'https://smooth-jackal-18.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js';
-  script.onload = () => { window.__clerkScriptLoaded = true; };
-  script.onerror = () => { window.__clerkScriptFailed = true; };
-  document.head.appendChild(script);
-  
-  initClerk();
-}
 
 // ===== TRAVEL UTILITY MODALS HANDLERS =====
 
@@ -6513,7 +6304,7 @@ function saveCompulsoryPhone() {
   
   if (appState.user) {
     appState.user.phone = phoneVal;
-    localStorage.setItem(`railquick_phone_${appState.user.clerkId || 'guest'}`, phoneVal);
+    localStorage.setItem(`railquick_phone_${appState.user.email || 'guest'}`, phoneVal);
     localStorage.setItem('railquick_global_phone', phoneVal);
     saveState();
     initAccountPage();

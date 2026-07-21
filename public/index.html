@@ -1122,10 +1122,7 @@ input, textarea, select { font-size: 16px !important; }
 #account-logged-section {
   padding-bottom: calc(116px + var(--rq-safe-bottom)) !important;
 }
-#clerk-sign-in-mount {
-  max-width: 100%;
-  overflow: visible;
-}
+
 
 @media (min-width: 413px) {
   .app-wrapper { border-radius: 30px; }
@@ -3153,7 +3150,6 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
   <div id="page-account" class="page tab-page" style="background:#0f1209;overflow-y:auto;padding-bottom:90px;">
     <!-- Hidden elements to prevent JS errors -->
     <div id="account-login-section" style="display:none;">
-      <div id="clerk-sign-in-mount"></div>
     </div>
     <div id="account-logged-section" style="display:none;">
       <div id="profile-avatar"></div>
@@ -3352,7 +3348,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         localStorage.setItem('railquick_custom_profile_dob', displayDob);
         
         if (typeof appState !== 'undefined' && appState.user) {
-          const userId = appState.user.clerkId || appState.user.email;
+          const userId = appState.user.email;
           if (userId) {
             localStorage.setItem('railquick_profile_name_' + userId, newName);
             localStorage.setItem('railquick_profile_phone_' + userId, displayPhone);
@@ -3695,7 +3691,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         Sign In to Continue
       </button>
 
-      <p class="text-[9px] text-gray-400 mt-2">Secured by <span class="font-semibold text-primary">Clerk</span> · End-to-end encrypted</p>
+      <p class="text-[9px] text-gray-400 mt-2">Secured by <span class="font-semibold text-primary">Supabase</span> · End-to-end encrypted</p>
     </div>
   </div>
 

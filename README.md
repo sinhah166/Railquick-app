@@ -6,7 +6,6 @@
   
   [![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
   [![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E.svg)](https://supabase.com/)
-  [![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF.svg)](https://clerk.dev/)
   [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 </div>
 
@@ -29,7 +28,7 @@ The current application serves as a comprehensive **Waitlist and Early Access Po
   * Personal Care & Hygiene products
   * Electronics (Chargers, earphones)
   * Travel Essentials (Neck pillows, eye masks)
-* **🔐 Secure Authentication**: Integrated OTP-based Email authentication utilizing Clerk & Supabase.
+* **🔐 Secure Authentication**: Integrated OTP-based Email authentication utilizing Supabase.
 * **👤 User Profile Management**: Persistent profile saving (Name, Phone Number, Date of Birth) synchronized dynamically.
 * **📱 Responsive Mobile-First UI**: Beautiful, intuitive, and fluid interface tailored for smartphone browsers.
 
@@ -41,7 +40,6 @@ The current application serves as a comprehensive **Waitlist and Early Access Po
 * **Backend**: Node.js (Core `http` module for routing and API handling)
 * **Database & Auth**: 
   * [Supabase](https://supabase.com/) (PostgreSQL & Waitlist Management)
-  * [Clerk](https://clerk.dev/) (User Identity & OTP Auth)
 * **Email Service**: [Resend](https://resend.com/) (Transactional emails for the Waitlist)
 
 ---
