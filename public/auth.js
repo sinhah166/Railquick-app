@@ -27,10 +27,10 @@ function updateAuthState(session) {
     if (authBtnIcon) authBtnIcon.innerText = "logout";
     
     const displayName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "User";
-    const profileNameEl = document.getElementById("display-name") || document.querySelector("#page-account .text-xl.font-black");
+    const profileNameEl = document.getElementById("display-profile-name");
     if (profileNameEl) profileNameEl.innerText = displayName;
     
-    const profilePhoneEl = document.getElementById("display-phone") || document.querySelector("#page-account .text-sm.text-gray-500");
+    const profilePhoneEl = document.getElementById("display-profile-details");
     if (profilePhoneEl) profilePhoneEl.innerText = session.user.email;
     
   } else {
@@ -39,10 +39,10 @@ function updateAuthState(session) {
     if (authBtnText) authBtnText.innerText = "Login";
     if (authBtnIcon) authBtnIcon.innerText = "login";
     
-    const profileNameEl = document.getElementById("display-name") || document.querySelector("#page-account .text-xl.font-black");
+    const profileNameEl = document.getElementById("display-profile-name");
     if (profileNameEl) profileNameEl.innerText = "Guest User";
     
-    const profilePhoneEl = document.getElementById("display-phone") || document.querySelector("#page-account .text-sm.text-gray-500");
+    const profilePhoneEl = document.getElementById("display-profile-details");
     if (profilePhoneEl) profilePhoneEl.innerText = "Not logged in";
   }
 }
