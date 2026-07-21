@@ -231,7 +231,7 @@ async function queryRailkitAPI(url) {
   try {
     const response = await fetch(url, {
       headers: {
-        'x-api-key': process.env.RAILKIT_API_KEY || 'irctc_a0477021c3cdc7d547c18c196b9f39b871c9f02621e2bd86',
+        'x-api-key': process.env.RAILKIT_API_KEY,
         'accept': 'application/json'
       }
     });
