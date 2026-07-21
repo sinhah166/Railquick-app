@@ -3708,6 +3708,10 @@ function trackOrder(orderId) {
 function initAccountPage() {
   const logged = document.getElementById('account-logged-section');
   const login = document.getElementById('account-login-section');
+  
+  const authBtnText = document.getElementById("sidebar-auth-text");
+  const authBtnIcon = document.getElementById("sidebar-auth-icon");
+
   if (appState.user) {
     if (!appState.user.phone) {
       const savedPhone = localStorage.getItem(`railquick_phone_${appState.user.clerkId || 'guest'}`) || localStorage.getItem('railquick_global_phone');
@@ -3719,9 +3723,36 @@ function initAccountPage() {
 
     if (login) login.classList.add('hidden'); 
     if (logged) logged.classList.remove('hidden');
-    document.getElementById('profile-name').textContent = appState.user.name || 'User';
-    document.getElementById('profile-email').textContent = appState.user.email || '';
-    document.getElementById('profile-phone').textContent = appState.user.phone ? 'Phone: ' + appState.user.phone : 'Phone: Not Linked';
+    
+    if (authBtnText) authBtnText.innerText = "Logout";
+    if (authBtnIcon) authBtnIcon.innerText = "logout";
+    
+    // Update old profile elements (if they still exist)
+    const pName = document.getElementById('profile-name');
+    const pEmail = document.getElementById('profile-email');
+    const pPhone = document.getElementById('profile-phone');
+    if (pName) pName.textContent = appState.user.name || 'User';
+    if (pEmail) pEmail.textContent = appState.user.email || '';
+    if (pPhone) pPhone.textContent = appState.user.phone ? 'Phone: ' + appState.user.phone : 'Phone: Not Linked';
+    
+    // Update new UI profile elements
+    const dName = document.getElementById('display-profile-name');
+    const dDetails = document.getElementById('display-profile-details');
+    
+    const savedName = localStorage.getItem('railquick_custom_profile_name');
+    const savedPhone2 = localStorage.getItem('railquick_custom_profile_phone');
+    const savedDob = localStorage.getItem('railquick_custom_profile_dob');
+    
+    if (dName) {
+      dName.innerText = savedName || appState.user.name || 'Your Name';
+    }
+    
+    if (dDetails) {
+      let displayPhone = savedPhone2 || (appState.user.phone ? `+91 ${appState.user.phone.replace('+91', '').trim()}` : null);
+      if (!displayPhone || displayPhone === '+91') displayPhone = 'XXXXXXXXXX';
+      let displayDob = savedDob || 'DD/MM/YYYY';
+      dDetails.innerText = `${displayPhone} • ${displayDob}`;
+    }
     
     const completionCard = document.getElementById('profile-completion-card');
     if (completionCard) {
@@ -3745,13 +3776,17 @@ function initAccountPage() {
     }
     // Unmount Clerk sign-in if it was mounted
     const mountEl = document.getElementById('clerk-sign-in-mount');
-    if (mountEl && clerkInstance) {
+    if (mountEl && typeof clerkInstance !== 'undefined' && clerkInstance) {
       try { clerkInstance.unmountSignIn(mountEl); } catch(e) {}
       mountEl.innerHTML = '';
     }
   } else { 
     if (login) login.classList.remove('hidden'); 
     if (logged) logged.classList.add('hidden');
+    
+    if (authBtnText) authBtnText.innerText = "Login";
+    if (authBtnIcon) authBtnIcon.innerText = "login";
+    
     // Mount Clerk's embedded sign-in form
     const mountEl = document.getElementById('clerk-sign-in-mount');
     if (mountEl && clerkInstance && clerkInitDone) {
@@ -3810,6 +3845,20 @@ function triggerClerkSignIn() {
 }
 
 function googleSignIn() {
+  const clerk = clerkInstance || window.Clerk;
+  if (clerk) {
+    if (typeof showToast === "function") showToast("Redirecting to Google...", "info");
+    try {
+      clerk.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: window.location.href,
+        redirectUrlComplete: window.location.href
+      });
+      return;
+    } catch (e) {
+      console.error("Clerk google error:", e);
+    }
+  }
   triggerClerkSignIn();
 }
 
@@ -3958,52 +4007,76 @@ function showLoginScreen() {
           <span class="material-symbols-outlined" style="color:#fff;font-size:36px;">train</span>
         </div>
         <h2 style="color:#fff;font-size:24px;font-weight:900;font-family:'Outfit',sans-serif;margin:0;">Welcome to RailQuick</h2>
-        <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:6px;">Sign in to your account or create a new one</p>
+        <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:6px;">Sign in or create a new account</p>
       </div>
       
-      <!-- Login Form -->
-      <div style="margin-top:28px;text-align:left;">
+      <!-- Login / Signup Form -->
+      <div id="login-form-step-1" style="margin-top:28px;text-align:left;">
         <!-- Name -->
         <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Full Name</label>
         <input type="text" id="login-name" placeholder="Enter your name" maxlength="50"
           style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:14px 16px;border-radius:14px;font-family:'Outfit',sans-serif;font-size:15px;margin-bottom:4px;box-sizing:border-box;outline:none;"
-          oninput="this.value = this.value.replace(/[^a-zA-Z\\s]/g, ''); validateLoginForm();">
+          oninput="validateLoginForm();">
         <div id="login-name-error" style="color:#ef4444;font-size:11px;margin-bottom:12px;padding-left:4px;min-height:16px;"></div>
         
-        <!-- Phone -->
-        <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Mobile Number</label>
-        <div style="display:flex;align-items:center;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);border-radius:14px;overflow:hidden;margin-bottom:4px;">
-          <span style="color:rgba(255,255,255,0.5);padding:14px 0 14px 16px;font-size:15px;font-weight:600;">+91</span>
-          <input type="tel" id="login-phone" placeholder="XXXXXXXXXX" maxlength="10"
-            style="flex:1;background:transparent;border:none;color:#fff;padding:14px 16px 14px 8px;font-size:15px;outline:none;box-sizing:border-box;"
-            oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateLoginForm();">
-        </div>
-        <div id="login-phone-error" style="color:#ef4444;font-size:11px;margin-bottom:12px;padding-left:4px;min-height:16px;"></div>
+        <!-- Email -->
+        <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Email Address</label>
+        <input type="email" id="login-email" placeholder="Enter your email"
+          style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:14px 16px;border-radius:14px;font-family:'Outfit',sans-serif;font-size:15px;margin-bottom:4px;box-sizing:border-box;outline:none;"
+          oninput="validateLoginForm();">
+        <div id="login-email-error" style="color:#ef4444;font-size:11px;margin-bottom:12px;padding-left:4px;min-height:16px;"></div>
         
-        <!-- DOB -->
-        <label style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Date of Birth <span style="color:rgba(255,255,255,0.3);">(optional)</span></label>
-        <input type="date" id="login-dob"
-          style="width:100%;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:14px 16px;border-radius:14px;font-size:14px;margin-bottom:24px;box-sizing:border-box;color-scheme:dark;outline:none;">
-        
-        <!-- Continue Button -->
-        <button id="login-continue-btn" onclick="handleLoginContinue()" disabled
-          style="width:100%;background:rgba(34,197,94,0.4);border:none;color:rgba(255,255,255,0.5);padding:16px;border-radius:14px;font-size:15px;font-weight:800;font-family:'Outfit',sans-serif;cursor:not-allowed;letter-spacing:0.5px;transition:all 0.3s ease;">
-          Continue
+        <!-- Verify Button -->
+        <button id="login-verify-btn" onclick="handleVerifyClick()" disabled
+          style="width:100%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.4);padding:16px;border-radius:14px;font-size:15px;font-weight:800;font-family:'Outfit',sans-serif;cursor:not-allowed;letter-spacing:0.5px;transition:all 0.3s ease;margin-bottom:16px;">
+          Verify Now
         </button>
 
-        <!-- Skip Button -->
+        <div style="display:flex;align-items:center;gap:12px;margin:24px 0;">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+          <span style="color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;">OR</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+        </div>
+
+        <!-- Google Login -->
+        <button onclick="if(window.loginWithGoogle) window.loginWithGoogle(); else showToast('Google login not configured','error');"
+          style="width:100%;background:#ffffff;border:none;color:#1e293b;padding:16px;border-radius:14px;font-size:15px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;letter-spacing:0.5px;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;" alt="G">
+          Continue with Google
+        </button>
+        
         <button onclick="document.getElementById('railquick-login-screen').remove(); navigateTo('page-shop');"
           style="width:100%;background:transparent;border:none;color:rgba(255,255,255,0.4);padding:16px;margin-top:8px;border-radius:14px;font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all 0.3s ease;">
           Skip for now
         </button>
-        
-        <!-- Terms -->
-        <p style="color:rgba(255,255,255,0.3);font-size:10px;text-align:center;margin-top:16px;line-height:1.6;">
-          By continuing, you agree to RailQuick's<br>
-          <span style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Terms of Service</span> & 
-          <span style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Privacy Policy</span>
-        </p>
       </div>
+
+      <!-- OTP Form (Hidden by default) -->
+      <div id="login-form-step-2" style="display:none;margin-top:28px;text-align:center;">
+        <h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:8px;">Check your email</h3>
+        <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:24px;">We've sent a 6-digit code to <br><span id="display-otp-email" style="color:#fff;font-weight:600;"></span></p>
+
+        <input type="text" id="login-otp" placeholder="Enter OTP" maxlength="6"
+          style="width:100%;text-align:center;letter-spacing:4px;background:#1e2a14;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:16px;border-radius:14px;font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;margin-bottom:24px;box-sizing:border-box;outline:none;"
+          oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.length === 6) handleOTPVerify();">
+        
+        <button id="login-submit-otp-btn" onclick="handleOTPVerify()"
+          style="width:100%;background:#22c55e;border:none;color:#fff;padding:16px;border-radius:14px;font-size:15px;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer;letter-spacing:0.5px;transition:all 0.3s ease;margin-bottom:16px;">
+          Continue
+        </button>
+        
+        <button onclick="document.getElementById('login-form-step-2').style.display='none';document.getElementById('login-form-step-1').style.display='block';"
+          style="background:transparent;border:none;color:rgba(255,255,255,0.5);font-size:14px;font-weight:600;cursor:pointer;">
+          Back to Email
+        </button>
+      </div>
+      
+      <!-- Terms -->
+      <p style="color:rgba(255,255,255,0.3);font-size:10px;text-align:center;margin-top:32px;line-height:1.6;">
+        By continuing, you agree to RailQuick's<br>
+        <span style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Terms of Service</span> & 
+        <span style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Privacy Policy</span>
+      </p>
     </div>
   `;
   
@@ -4012,13 +4085,12 @@ function showLoginScreen() {
 
 function validateLoginForm() {
   const name = document.getElementById('login-name').value.trim();
-  const phone = document.getElementById('login-phone').value.trim();
-  const btn = document.getElementById('login-continue-btn');
+  const email = document.getElementById('login-email').value.trim();
+  const btn = document.getElementById('login-verify-btn');
   const nameErr = document.getElementById('login-name-error');
-  const phoneErr = document.getElementById('login-phone-error');
+  const emailErr = document.getElementById('login-email-error');
   let valid = true;
   
-  // Name: min 2 chars, letters & spaces
   if (name.length > 0 && name.length < 2) {
     nameErr.innerText = 'Name must be at least 2 characters';
     valid = false;
@@ -4026,19 +4098,15 @@ function validateLoginForm() {
     nameErr.innerText = '';
   }
   
-  // Phone: 10 digits, starts with 6-9
-  if (phone.length > 0 && phone.length < 10) {
-    phoneErr.innerText = 'Enter a valid 10-digit mobile number';
-    valid = false;
-  } else if (phone.length === 10 && !/^[6-9]/.test(phone)) {
-    phoneErr.innerText = 'Invalid mobile number';
+  const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+  if (email.length > 0 && !emailRegex.test(email)) {
+    emailErr.innerText = 'Enter a valid email address';
     valid = false;
   } else {
-    phoneErr.innerText = '';
+    emailErr.innerText = '';
   }
   
-  // Both name (2+) and phone (10) are required
-  const isReady = valid && name.length >= 2 && phone.length === 10;
+  const isReady = valid && name.length >= 2 && emailRegex.test(email);
   
   if (isReady) {
     btn.disabled = false;
@@ -4047,58 +4115,96 @@ function validateLoginForm() {
     btn.style.cursor = 'pointer';
   } else {
     btn.disabled = true;
-    btn.style.background = 'rgba(34,197,94,0.4)';
-    btn.style.color = 'rgba(255,255,255,0.5)';
+    btn.style.background = 'rgba(255,255,255,0.1)';
+    btn.style.color = 'rgba(255,255,255,0.4)';
     btn.style.cursor = 'not-allowed';
   }
   return isReady;
 }
 
-function handleLoginContinue() {
+async function handleVerifyClick() {
   if (!validateLoginForm()) return;
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
   
-  const name = document.getElementById('login-name').value.trim();
-  const phone = document.getElementById('login-phone').value.trim();
-  const dobVal = document.getElementById('login-dob').value;
+  const btn = document.getElementById('login-verify-btn');
+  const originalText = btn.innerText;
+  btn.innerText = 'Sending...';
+  btn.disabled = true;
   
-  // Format DOB
-  let displayDob = '';
-  if (dobVal) {
-    const parts = dobVal.split('-');
-    displayDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
+  try {
+    if (window.sendEmailOTP) {
+      const { error } = await window.sendEmailOTP(email);
+      if (error) throw error;
+    } else {
+      throw new Error("OTP service not loaded");
+    }
+    
+    document.getElementById('login-form-step-1').style.display = 'none';
+    document.getElementById('display-otp-email').innerText = email;
+    document.getElementById('login-form-step-2').style.display = 'block';
+    showToast("OTP sent to your email!", "success");
+    
+  } catch(err) {
+    showToast(err.message || "Failed to send OTP. Rate limit reached?", "error");
+    btn.innerText = originalText;
+    btn.disabled = false;
   }
-  const displayPhone = `+91 ${phone}`;
+}
+
+async function handleOTPVerify() {
+  const otp = document.getElementById('login-otp').value.trim();
+  if (otp.length !== 6) return;
   
-  // Save profile data
-  localStorage.setItem('railquick_custom_profile_name', name);
-  localStorage.setItem('railquick_custom_profile_phone', displayPhone);
-  localStorage.setItem('railquick_custom_profile_dob', displayDob);
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const name = document.getElementById('login-name').value.trim();
   
-  // Update profile display
-  const nameEl = document.getElementById('display-profile-name');
-  const detailsEl = document.getElementById('display-profile-details');
-  if (nameEl) nameEl.innerText = name;
-  if (detailsEl) detailsEl.innerText = `${displayPhone} • ${displayDob || 'No DOB'}`;
+  const btn = document.getElementById('login-submit-otp-btn');
+  btn.innerText = 'Verifying...';
+  btn.disabled = true;
   
-  // Set as logged in user (local session)
-  appState.user = {
-    name: name,
-    email: '',
-    phone: displayPhone,
-    avatarUrl: '',
-    avatar: name[0].toUpperCase(),
-    provider: 'local',
-    clerkId: 'local_' + phone,
-    loginAt: new Date().toISOString()
-  };
-  saveState();
-  initAccountPage();
-  
-  // Remove login screen
-  const loginScreen = document.getElementById('railquick-login-screen');
-  if (loginScreen) loginScreen.remove();
-  
-  showToast(`Welcome, ${name}! 🎉`, 'success');
+  try {
+    if (window.verifyEmailOTP) {
+      const { data, error } = await window.verifyEmailOTP(email, otp);
+      if (error) throw error;
+      
+      // Successfully verified. Set appState user locally before page refresh (if any)
+      appState.user = {
+        name: name,
+        email: email,
+        phone: '', // Placeholder, user can edit later
+        avatarUrl: '',
+        avatar: name[0].toUpperCase(),
+        provider: 'supabase',
+        clerkId: 'sb_' + email,
+        loginAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('railquick_custom_profile_name', name);
+      // Reset phone and dob explicitly so it shows placeholder in UI
+      localStorage.removeItem('railquick_custom_profile_phone');
+      localStorage.removeItem('railquick_custom_profile_dob');
+      
+      saveState();
+      
+      const loginScreen = document.getElementById('railquick-login-screen');
+      if (loginScreen) loginScreen.remove();
+      
+      // Update UI
+      if (typeof updateAuthState === 'function' && window.supabaseClient) {
+         // Supabase onAuthStateChange will also fire, but let's init Account Page immediately
+         initAccountPage();
+      } else {
+         initAccountPage();
+      }
+      
+      showToast(`Welcome, ${name}! 🎉`, 'success');
+      
+    }
+  } catch (err) {
+    showToast(err.message || "Invalid or expired OTP", "error");
+    btn.innerText = 'Continue';
+    btn.disabled = false;
+  }
 }
 
 // ===== PRODUCT MODAL DETAILS =====
@@ -6381,7 +6487,7 @@ function updateHomeProfileAvatar() {
   
   if (appState.user) {
     if (appState.user.avatarUrl) {
-      container.innerHTML = `<img src="${appState.user.avatarUrl}" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.innerHTML='<div class=\\'w-full h-full rounded-full bg-primary flex items-center justify-center text-white text-xs font-black\\'>${appState.user.avatar || 'U'}</div>';">`;
+      container.innerHTML = `<img src="${appState.user.avatarUrl}" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null;">`;
     } else {
       container.innerHTML = `
         <div class="w-full h-full rounded-full bg-primary flex items-center justify-center text-white text-xs font-black">
@@ -6399,7 +6505,7 @@ function saveCompulsoryPhone() {
   if (!input) return;
   
   const phoneVal = input.value.trim();
-  const phoneRegex = /^[6-9]\d{9}$/; // 10-digit Indian phone numbers
+  const phoneRegex = /^[6-9]\d{9}$/;
   if (!phoneRegex.test(phoneVal)) {
     showToast('Please enter a valid 10-digit mobile number', 'error');
     return;
@@ -6411,7 +6517,7 @@ function saveCompulsoryPhone() {
     localStorage.setItem('railquick_global_phone', phoneVal);
     saveState();
     initAccountPage();
-    showToast('✓ Mobile number verified & linked!', 'success');
+    showToast('Mobile number verified & linked!', 'success');
   } else {
     showToast('Please sign in first', 'error');
   }
@@ -6463,9 +6569,9 @@ function renderQuizQuestion() {
 
 function answerQuiz(selected, correct) {
   if (selected === correct) {
-    showToast('✓ Correct!', 'success');
+    showToast('Correct!', 'success');
   } else {
-    showToast('✗ Wrong! Answer: ' + QUIZ_QUESTIONS[currentQuizQ].options[correct], 'error');
+    showToast('Wrong! Answer: ' + QUIZ_QUESTIONS[currentQuizQ].options[correct], 'error');
   }
   currentQuizQ++;
   setTimeout(() => renderQuizQuestion(), 800);
@@ -6505,10 +6611,9 @@ function saveRecentSearch(term) {
     recents = JSON.parse(localStorage.getItem('railquick_recent_searches')) || [];
   } catch(e) {}
   
-  // Remove duplicate if exists, and push to front
   recents = recents.filter(x => x.toLowerCase() !== clean.toLowerCase());
   recents.unshift(clean);
-  recents = recents.slice(0, 6); // Max 6 recent searches
+  recents = recents.slice(0, 6);
   
   localStorage.setItem('railquick_recent_searches', JSON.stringify(recents));
   loadRecentSearches();
@@ -6528,7 +6633,6 @@ function toggleTrainDirection(element) {
     label.textContent = isForward ? 'Reverse' : 'Forward';
     arrow.style.transform = isForward ? 'rotate(180deg)' : 'rotate(0deg)';
     showToast(`Train direction toggled to ${isForward ? 'Reverse' : 'Forward'}!`, 'info');
-    
     if (navigator.vibrate) navigator.vibrate(20);
   }
 }
@@ -6577,3 +6681,4 @@ function goBackToSearch() {
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+

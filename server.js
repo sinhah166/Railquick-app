@@ -35,10 +35,10 @@ loadEnv();
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "127.0.0.1";
 
-const supabaseUrl = process.env.SUPABASE_URL || "https://dfwwgppsjnovbzvldftc.supabase.co";
+const supabaseUrl = process.env.SUPABASE_URL || "https://czibjqgtafvdivompfin.supabase.co";
 const supabaseAnonKey =
   process.env.SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmd3dncHBzam5vdWJ6dmxkZnRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDExMTksImV4cCI6MjA5NzM3NzExOX0._B_bI6yUtQpWo5ZMuon6TmiJqf2ps_gAcnW7dcdoBuE";
+  "sb_publishable_JypP4hTbuBTbwsejs6rmmw_zev1g28Y";
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendFrom = process.env.RESEND_FROM || "RailQuick <onboarding@resend.dev>";
 
