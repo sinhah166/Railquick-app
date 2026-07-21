@@ -4,6 +4,7 @@
 const SUPABASE_URL = "https://czibjqgtafvdivompfin.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_JypP4hTbuBTbwsejs6rmmw_zev1g28Y";
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+window.supabaseClient = supabaseClient;
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (supabaseClient) {
@@ -31,7 +32,15 @@ function updateAuthState(session) {
     if (profileNameEl) profileNameEl.innerText = displayName;
     
     const profilePhoneEl = document.getElementById("display-profile-details");
-    if (profilePhoneEl) profilePhoneEl.innerText = session.user.email;
+    if (profilePhoneEl) {
+      const phone = session.user.user_metadata?.phone;
+      const dob = session.user.user_metadata?.dob;
+      if (phone || dob) {
+        profilePhoneEl.innerText = `${phone || 'No Phone'} • ${dob || 'No DOB'}`;
+      } else {
+        profilePhoneEl.innerText = '+91 XXXXXXXXXX • DD/MM/YYYY';
+      }
+    }
     
   } else {
     if (typeof appState !== 'undefined') appState.user = null;
@@ -129,7 +138,12 @@ window.sendAuthOTP = async function() {
     showAuthSuccess("OTP sent to your email!");
     
   } catch (err) {
-    showAuthError(err.message || "Failed to send OTP.");
+    console.error("OTP Error:", err);
+    let errorText = err.message || "Failed to send OTP.";
+    if (errorText === "{}" || typeof errorText === 'object') {
+      errorText = "Failed to send OTP. Please check your email or try again later.";
+    }
+    showAuthError(errorText);
   } finally {
     btn.innerText = 'Send OTP to Email';
     btn.disabled = false;

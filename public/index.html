@@ -3324,7 +3324,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         }, 50);
       }
 
-      function saveProfile() {
+      async function saveProfile() {
         if (!validateProfileForm()) return;
 
         const newName = document.getElementById('edit-name-input').value.trim();
@@ -3346,6 +3346,19 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         localStorage.setItem('railquick_custom_profile_name', newName);
         localStorage.setItem('railquick_custom_profile_phone', displayPhone);
         localStorage.setItem('railquick_custom_profile_dob', displayDob);
+
+        if (window.supabaseClient) {
+          const { data: { session } } = await window.supabaseClient.auth.getSession();
+          if (session) {
+            await window.supabaseClient.auth.updateUser({
+              data: {
+                full_name: newName,
+                phone: displayPhone,
+                dob: displayDob
+              }
+            });
+          }
+        }
         
         if (typeof appState !== 'undefined' && appState.user) {
           const userId = appState.user.email;
