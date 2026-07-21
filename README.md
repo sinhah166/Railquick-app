@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=1200&auto=format&fit=crop" alt="RailQuick Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px;">
+  <img src="public/railquick-logo.png" alt="RailQuick Logo" style="border-radius: 12px; margin-bottom: 20px; max-height: 200px;">
   
   # 🚄 RailQuick
   **Your ultimate in-journey train delivery & assistance platform**
