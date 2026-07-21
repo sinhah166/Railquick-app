@@ -5,15 +5,8 @@
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
   <title>RailQuick - Premium Journey Delivery</title>
   
-  <!-- Clerk Authentication: Official JS SDK (Loaded via CDN with async execution, fallback checked in app.js) -->
-  <script
-    async
-    crossorigin="anonymous"
-    data-clerk-publishable-key="pk_test_c21vb3RoLWphY2thbC0xOC5jbGVyay5hY2NvdW50cy5kZXYk"
-    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
-    type="text/javascript"
-  ></script>
-  
+  <!-- Supabase Auth handles logic now -->
+
   <!-- Tailwind CSS CDN with Forms & Containers -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   
@@ -3946,14 +3939,8 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
       
       <h3 class="text-xl font-headline font-black text-on-surface mb-2">Welcome to RailQuick</h3>
       
-      <!-- Tabs -->
-      <div class="flex gap-2 p-1 bg-slate-100 rounded-xl mb-4">
-        <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-primary transition-all">Old User (Login)</button>
-        <button id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all">New User (Sign Up)</button>
-      </div>
-
-      <!-- Login Form -->
-      <div id="auth-login-form" class="space-y-4">
+      <!-- Unified Auth Form -->
+      <div id="auth-unified-form" class="space-y-4">
         <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
           Continue with Google
@@ -3965,43 +3952,17 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
           <div class="flex-grow border-t border-gray-200"></div>
         </div>
 
-        <div id="login-step-1" class="space-y-4">
-          <input type="email" id="login-email" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-spring" placeholder="Email Address" />
-          <button id="login-send-otp-btn" onclick="sendLoginOTP()" class="w-full bg-primary text-white py-3.5 rounded-xl font-headline font-bold hover:bg-primary-light transition-spring uppercase tracking-wider text-xs shadow-md">Send OTP to Email</button>
+        <div id="auth-step-1" class="space-y-4">
+          <input type="text" id="auth-name" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-spring" placeholder="Full Name (optional for login)" />
+          <input type="email" id="auth-email" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-spring" placeholder="Email Address" />
+          <button id="auth-send-otp-btn" onclick="sendAuthOTP()" class="w-full bg-primary text-white py-3.5 rounded-xl font-headline font-bold hover:bg-primary-light transition-spring uppercase tracking-wider text-xs shadow-md">Send OTP to Email</button>
         </div>
 
-        <div id="login-step-2" class="space-y-4 hidden">
+        <div id="auth-step-2" class="space-y-4 hidden">
           <p class="text-xs text-center text-gray-500">We've sent a 6-digit code to your email.</p>
-          <input type="text" id="login-otp" maxlength="6" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-center tracking-widest text-lg font-bold focus:outline-none focus:border-primary transition-spring" placeholder="------" />
-          <button id="login-verify-otp-btn" onclick="verifyLoginOTP()" class="w-full bg-primary text-white py-3.5 rounded-xl font-headline font-bold hover:bg-primary-light transition-spring uppercase tracking-wider text-xs shadow-md">Verify & Log In</button>
-          <button onclick="document.getElementById('login-step-2').classList.add('hidden'); document.getElementById('login-step-1').classList.remove('hidden');" class="w-full text-gray-400 py-2 text-xs font-bold hover:text-gray-600 transition-colors">Back</button>
-        </div>
-      </div>
-
-      <!-- Sign Up Form -->
-      <div id="auth-signup-form" class="space-y-4 hidden">
-        <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Continue with Google
-        </button>
-        
-        <div class="relative flex items-center py-2">
-          <div class="flex-grow border-t border-gray-200"></div>
-          <span class="flex-shrink-0 mx-4 text-gray-400 text-xs font-medium uppercase">Or</span>
-          <div class="flex-grow border-t border-gray-200"></div>
-        </div>
-
-        <div id="signup-step-1" class="space-y-4">
-          <input type="text" id="signup-name" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-spring" placeholder="Full Name" />
-          <input type="email" id="signup-email" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-spring" placeholder="Email Address" />
-          <button id="signup-send-otp-btn" onclick="sendSignupOTP()" class="w-full bg-primary text-white py-3.5 rounded-xl font-headline font-bold hover:bg-primary-light transition-spring uppercase tracking-wider text-xs shadow-md">Send OTP to Email</button>
-        </div>
-
-        <div id="signup-step-2" class="space-y-4 hidden">
-          <p class="text-xs text-center text-gray-500">We've sent a 6-digit code to your email.</p>
-          <input type="text" id="signup-otp" maxlength="6" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-center tracking-widest text-lg font-bold focus:outline-none focus:border-primary transition-spring" placeholder="------" />
-          <button id="signup-verify-otp-btn" onclick="verifySignupOTP()" class="w-full bg-primary text-white py-3.5 rounded-xl font-headline font-bold hover:bg-primary-light transition-spring uppercase tracking-wider text-xs shadow-md">Verify & Create Account</button>
-          <button onclick="document.getElementById('signup-step-2').classList.add('hidden'); document.getElementById('signup-step-1').classList.remove('hidden');" class="w-full text-gray-400 py-2 text-xs font-bold hover:text-gray-600 transition-colors">Back</button>
+          <input type="text" id="auth-otp" maxlength="6" class="w-full bg-[#F4F6F5]/70 border border-outline-variant rounded-xl px-4 py-3 text-center tracking-widest text-lg font-bold focus:outline-none focus:border-primary transition-spring" placeholder="------" />
+          <button id="auth-verify-otp-btn" onclick="verifyAuthOTP()" class="w-full bg-primary text-white py-3.5 rounded-xl font-headline font-bold hover:bg-primary-light transition-spring uppercase tracking-wider text-xs shadow-md">Verify & Continue</button>
+          <button onclick="document.getElementById('auth-step-2').classList.add('hidden'); document.getElementById('auth-step-1').classList.remove('hidden');" class="w-full text-gray-400 py-2 text-xs font-bold hover:text-gray-600 transition-colors">Back</button>
         </div>
       </div>
       

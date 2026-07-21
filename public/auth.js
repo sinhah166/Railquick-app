@@ -1,11 +1,10 @@
 // auth.js
-// Supabase Authentication Logic for RailQuick
+// Supabase Authentication Logic for RailQuick (Unified seamless flow)
 
 const SUPABASE_URL = "https://czibjqgtafvdivompfin.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_JypP4hTbuBTbwsejs6rmmw_zev1g28Y";
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-// Ensure state is up to date on load
 document.addEventListener("DOMContentLoaded", async () => {
   if (supabaseClient) {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -27,7 +26,7 @@ function updateAuthState(session) {
     if (authBtnText) authBtnText.innerText = "Logout";
     if (authBtnIcon) authBtnIcon.innerText = "logout";
     
-    const displayName = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    const displayName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "User";
     const profileNameEl = document.getElementById("display-name") || document.querySelector("#page-account .text-xl.font-black");
     if (profileNameEl) profileNameEl.innerText = displayName;
     
@@ -58,7 +57,9 @@ window.handleSidebarAuthClick = function() {
 
 window.openAuthModal = function() {
   document.getElementById("modal-auth").classList.remove("hidden");
-  switchAuthTab('login');
+  // Reset fields
+  document.getElementById("auth-step-1").classList.remove("hidden");
+  if(document.getElementById("auth-step-2")) document.getElementById("auth-step-2").classList.add("hidden");
   document.getElementById("auth-error-msg").classList.add("hidden");
   document.getElementById("auth-success-msg").classList.add("hidden");
 };
@@ -67,26 +68,9 @@ window.closeAuthModal = function() {
   document.getElementById("modal-auth").classList.add("hidden");
 };
 
+// Kept for compatibility if called from elsewhere
 window.switchAuthTab = function(tab) {
-  const loginForm = document.getElementById("auth-login-form");
-  const signupForm = document.getElementById("auth-signup-form");
-  const tabLogin = document.getElementById("tab-login");
-  const tabSignup = document.getElementById("tab-signup");
-  
-  document.getElementById("auth-error-msg").classList.add("hidden");
-  document.getElementById("auth-success-msg").classList.add("hidden");
-
-  if (tab === 'login') {
-    loginForm.classList.remove("hidden");
-    signupForm.classList.add("hidden");
-    tabLogin.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-primary transition-all";
-    tabSignup.className = "flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
-  } else {
-    loginForm.classList.add("hidden");
-    signupForm.classList.remove("hidden");
-    tabSignup.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-primary transition-all";
-    tabLogin.className = "flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
-  }
+  // We unified the modal, so this doesn't need to do anything anymore
 };
 
 function showAuthError(msg) {
@@ -103,20 +87,45 @@ function showAuthSuccess(msg) {
   document.getElementById("auth-error-msg").classList.add("hidden");
 }
 
-window.sendLoginOTP = async function() {
-  const email = document.getElementById("login-email").value.trim().toLowerCase();
-  if (!email) return showAuthError("Enter a valid email address.");
+window.loginWithGoogle = async function() {
+  if (!supabaseClient) return showAuthError("Auth service not initialized");
+  try {
+    // This will redirect the user to Google login and then back to our app
+    await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+  } catch (err) {
+    showAuthError("Google Login Failed: " + err.message);
+  }
+};
+
+window.sendAuthOTP = async function() {
+  const name = document.getElementById("auth-name").value.trim();
+  const email = document.getElementById("auth-email").value.trim().toLowerCase();
   
-  const btn = document.getElementById("login-send-otp-btn");
+  if (!email) return showAuthError("Please enter a valid email address.");
+  
+  const btn = document.getElementById("auth-send-otp-btn");
   btn.innerText = 'Sending...';
   btn.disabled = true;
   
   try {
-    const { data, error } = await sendEmailOTP(email);
+    const { data, error } = await supabaseClient.auth.signInWithOtp({
+      email: email,
+      options: {
+        data: {
+          full_name: name || undefined
+        }
+      }
+    });
+    
     if (error) throw error;
     
-    document.getElementById("login-step-1").classList.add("hidden");
-    document.getElementById("login-step-2").classList.remove("hidden");
+    document.getElementById("auth-step-1").classList.add("hidden");
+    document.getElementById("auth-step-2").classList.remove("hidden");
     showAuthSuccess("OTP sent to your email!");
     
   } catch (err) {
@@ -127,60 +136,30 @@ window.sendLoginOTP = async function() {
   }
 };
 
-window.verifyLoginOTP = async function() {
-  const otp = document.getElementById("login-otp").value.trim();
+window.verifyAuthOTP = async function() {
+  const otp = document.getElementById("auth-otp").value.trim();
   if (otp.length !== 6) return showAuthError("Enter a valid 6-digit OTP.");
   
-  const email = document.getElementById("login-email").value.trim().toLowerCase();
+  const email = document.getElementById("auth-email").value.trim().toLowerCase();
   
-  const btn = document.getElementById("login-verify-otp-btn");
+  const btn = document.getElementById("auth-verify-otp-btn");
   btn.innerText = 'Verifying...';
   btn.disabled = true;
   
   try {
-    const { data, error } = await verifyEmailOTP(email, otp);
+    const { data, error } = await supabaseClient.auth.verifyOtp({
+      email: email,
+      token: otp,
+      type: 'email'
+    });
+    
     if (error) throw error;
     
-    const clerk = window.clerkInstance || window.Clerk;
-    let name = 'User';
-    if (clerk && clerk.user) {
-        name = clerk.user.fullName || clerk.user.firstName || clerk.user.username || name;
-    }
-
-    if (typeof appState !== 'undefined') {
-      appState.user = {
-        name: name,
-        email: email,
-        phone: '',
-        dob: '',
-        avatarUrl: clerk?.user?.imageUrl || '',
-        avatar: name[0].toUpperCase(),
-        provider: 'clerk_email',
-        clerkId: clerk?.user?.id || 'clk_' + email,
-        loginAt: new Date().toISOString()
-      };
-      
-      const userId = appState.user.clerkId;
-      const savedName = localStorage.getItem('railquick_profile_name_' + userId);
-      const savedPhone = localStorage.getItem('railquick_profile_phone_' + userId);
-      const savedDob = localStorage.getItem('railquick_profile_dob_' + userId);
-      
-      if (savedName) {
-        appState.user.name = savedName;
-        name = savedName;
-      }
-      if (savedPhone) appState.user.phone = savedPhone;
-      if (savedDob) appState.user.dob = savedDob;
-
-      localStorage.setItem('railquick_custom_profile_name', appState.user.name);
-      localStorage.setItem('railquick_custom_profile_phone', appState.user.phone || '');
-      localStorage.setItem('railquick_custom_profile_dob', appState.user.dob || '');
-
-      saveState();
-      initAccountPage();
-    }
+    // Auth state will automatically update via onAuthStateChange
     
     closeAuthModal();
+    
+    if (typeof initAccountPage === 'function') initAccountPage();
     
     const returnPage = localStorage.getItem('railquick_return_after_login') || 'page-account';
     if (typeof navigateTo === 'function') navigateTo(returnPage);
@@ -190,172 +169,21 @@ window.verifyLoginOTP = async function() {
   } catch (err) {
     showAuthError(err.message || "Invalid or expired OTP.");
   } finally {
-    btn.innerText = 'Verify & Log In';
+    btn.innerText = 'Verify & Continue';
     btn.disabled = false;
   }
 };
 
-window.sendSignupOTP = async function() {
-  const name = document.getElementById("signup-name").value.trim();
-  const email = document.getElementById("signup-email").value.trim();
-  const btn = document.getElementById("signup-send-otp-btn");
-  
-  if (!name || !email) return showAuthError("Please enter your name and email.");
-  
-  btn.innerText = 'Sending...';
-  btn.disabled = true;
-  
-  try {
-    const { data, error } = await sendEmailOTP(email);
-    if (error) throw error;
-    
-    document.getElementById("signup-step-1").classList.add("hidden");
-    document.getElementById("signup-step-2").classList.remove("hidden");
-    showAuthSuccess("OTP sent to your email!");
-    
-  } catch (err) {
-    showAuthError(err.message || "Failed to send OTP.");
-  } finally {
-    btn.innerText = 'Send OTP to Email';
-    btn.disabled = false;
-  }
-};
-
-window.verifySignupOTP = async function() {
-  const otp = document.getElementById("signup-otp").value.trim();
-  if (otp.length !== 6) return showAuthError("Enter a valid 6-digit OTP.");
-  
-  const email = document.getElementById("signup-email").value.trim().toLowerCase();
-  const name = document.getElementById("signup-name").value.trim();
-  const btn = document.getElementById("signup-verify-otp-btn");
-  
-  btn.innerText = 'Verifying...';
-  btn.disabled = true;
-  
-  try {
-    const { data, error } = await verifyEmailOTP(email, otp);
-    if (error) throw error;
-    
-    // Successfully verified, set state in app.js
-    if (typeof appState !== 'undefined') {
-      appState.user = {
-        name: name,
-        email: email,
-        phone: '',
-        dob: '',
-        avatarUrl: '',
-        avatar: name[0].toUpperCase(),
-        provider: 'supabase',
-        clerkId: 'sb_' + email,
-        loginAt: new Date().toISOString()
-      };
-      
-      const userId = appState.user.clerkId;
-      const savedName = localStorage.getItem('railquick_profile_name_' + userId);
-      const savedPhone = localStorage.getItem('railquick_profile_phone_' + userId);
-      const savedDob = localStorage.getItem('railquick_profile_dob_' + userId);
-      
-      if (savedName) {
-        appState.user.name = savedName;
-        name = savedName;
-      }
-      if (savedPhone) appState.user.phone = savedPhone;
-      if (savedDob) appState.user.dob = savedDob;
-
-      localStorage.setItem('railquick_custom_profile_name', appState.user.name);
-      localStorage.setItem('railquick_custom_profile_phone', appState.user.phone || '');
-      localStorage.setItem('railquick_custom_profile_dob', appState.user.dob || '');
-
-      saveState();
-      initAccountPage();
-    }
-    
-    closeAuthModal();
-    if (typeof showToast === "function") showToast(`Welcome, ${name}! 🎉`, 'success');
-    
-  } catch (err) {
-    showAuthError(err.message || "Invalid or expired OTP");
-    btn.innerText = 'Verify & Create Account';
-    btn.disabled = false;
-  }
-};
-
-window.loginWithGoogle = async function() {
-  if (typeof googleSignIn === 'function') {
-    googleSignIn();
-  }
-};
-
-window.sendEmailOTP = async function(email) {
-  const clerk = window.clerkInstance || window.Clerk;
-  if (!clerk) return { error: { message: "Auth service not ready" } };
-  
-  try {
-    try {
-      await clerk.client.signIn.create({ identifier: email, strategy: "email_code" });
-      return { data: {}, error: null };
-    } catch (e) {
-      if (e.errors && (e.errors[0].code === 'form_identifier_not_found' || e.errors[0].code === 'session_exists')) {
-        try { await clerk.client.signUp.create({ emailAddress: email }); } catch(err) {}
-        await clerk.client.signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-        return { data: {}, error: null };
-      }
-      throw e;
-    }
-  } catch (e) {
-    let msg = e.errors?.[0]?.longMessage || e.message || "Failed to send OTP";
-    return { data: null, error: { message: msg } };
-  }
-};
-
-window.verifyEmailOTP = async function(email, token) {
-  const clerk = window.clerkInstance || window.Clerk;
-  if (!clerk) return { error: { message: "Auth service not ready" } };
-  
-  try {
-    if (clerk.client.signIn.status === "needs_first_factor") {
-      const attempt = await clerk.client.signIn.attemptFirstFactor({ strategy: "email_code", code: token });
-      if (attempt.status === "complete") {
-        await clerk.setActive({ session: attempt.createdSessionId });
-        return { data: { user: { email } }, error: null };
-      }
-      return { data: null, error: { message: "Verification failed" } };
-    } else {
-      const attempt = await clerk.client.signUp.attemptEmailAddressVerification({ code: token });
-      if (attempt.status === "complete") {
-        await clerk.setActive({ session: attempt.createdSessionId });
-        return { data: { user: { email } }, error: null };
-      }
-      return { data: null, error: { message: "Verification failed" } };
-    }
-  } catch (e) {
-    let msg = e.errors?.[0]?.longMessage || e.message || "Invalid OTP";
-    return { data: null, error: { message: msg } };
-  }
-};
-
-// Override the old signOut from app.js if any
 window.signOut = async function() {
   if (confirm("Are you sure you want to log out?")) {
-    
-    // Sign out from Supabase
-    if (window.supabaseClient) {
+    if (supabaseClient) {
       await supabaseClient.auth.signOut();
     }
     
-    // Sign out from Clerk
-    const clerk = window.clerkInstance || window.Clerk;
-    if (clerk && clerk.user) {
-      await clerk.signOut();
-    }
-    
-    // Clear local state
+    // Clear local state manually just in case
     if (typeof appState !== 'undefined') {
       appState.user = null;
-      localStorage.removeItem('railquick_custom_profile_name');
-      localStorage.removeItem('railquick_custom_profile_phone');
-      localStorage.removeItem('railquick_custom_profile_dob');
-      saveState(); // assuming saveState() exists in app.js
+      if(typeof saveState === 'function') saveState();
     }
     
     // Reset manual UI elements
@@ -364,7 +192,6 @@ window.signOut = async function() {
     if (dName) dName.innerText = 'Guest User';
     if (dDetails) dDetails.innerText = 'Not logged in';
     
-    // Refresh Account Page UI
     if (typeof initAccountPage === 'function') {
       initAccountPage();
     }
