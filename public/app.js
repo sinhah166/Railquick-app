@@ -34,26 +34,26 @@ let appState = {
 // ===== PRODUCTS DATABASE =====
 const PRODUCTS = [
   // 1. Food & Beverages
-  { id: 101, name: 'Mineral Water Bottle', price: 20, mrp: 20, category: 'food', weight: '1 L', img: 'https://images.unsplash.com/photo-1523362624045-81675765928d?w=200&h=200&fit=crop', rating: 4.8, reviews: 1024, veg: true },
-  { id: 102, name: 'Coca Cola Cold Drink', price: 40, mrp: 40, category: 'food', weight: '300 ml', img: 'https://images.unsplash.com/photo-1543253687-c931c8e01820?w=200&h=200&fit=crop', rating: 4.7, reviews: 856, veg: true },
-  { id: 103, name: 'Real Fruit Juice', price: 20, mrp: 20, category: 'food', weight: '200 ml', img: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=200&h=200&fit=crop', rating: 4.9, reviews: 654, veg: true },
-  { id: 104, name: 'Red Bull Energy Drink', price: 125, mrp: 125, category: 'food', weight: '250 ml', img: 'https://images.unsplash.com/photo-1628045610660-f30a91e55099?w=200&h=200&fit=crop', rating: 4.6, reviews: 322, veg: true },
-  { id: 105, name: 'Hot Masala Tea', price: 20, mrp: 20, category: 'food', weight: '1 Cup', img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200&h=200&fit=crop', rating: 4.9, reviews: 1542, veg: true },
-  { id: 106, name: 'Lays Classic Salted Chips', price: 20, mrp: 20, category: 'food', weight: '50 g', img: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=200&h=200&fit=crop', rating: 4.8, reviews: 2045, veg: true },
+  { id: 101, name: 'Mineral Water Bottle', price: 20, mrp: 20, category: 'food', weight: '1 L', img: '/images/prod_water.png', rating: 4.8, reviews: 1024, veg: true },
+  { id: 102, name: 'Coca Cola Cold Drink', price: 40, mrp: 40, category: 'food', weight: '300 ml', img: '/images/prod_coke.png', rating: 4.7, reviews: 856, veg: true },
+  { id: 103, name: 'Real Fruit Juice', price: 20, mrp: 20, category: 'food', weight: '200 ml', img: '/images/prod_juice.png', rating: 4.9, reviews: 654, veg: true },
+  { id: 104, name: 'Red Bull Energy Drink', price: 125, mrp: 125, category: 'food', weight: '250 ml', img: '/images/prod_redbull.png', rating: 4.6, reviews: 322, veg: true },
+  { id: 105, name: 'Hot Masala Tea', price: 20, mrp: 20, category: 'food', weight: '1 Cup', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.9, reviews: 1542, veg: true },
+  { id: 106, name: 'Lays Classic Salted Chips', price: 20, mrp: 20, category: 'food', weight: '50 g', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.8, reviews: 2045, veg: true },
   { id: 107, name: 'Britannia Good Day Biscuits', price: 20, mrp: 20, category: 'food', weight: '75 g', img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200&h=200&fit=crop', rating: 4.7, reviews: 890, veg: true },
-  { id: 108, name: 'Haldirams Aloo Bhujia', price: 40, mrp: 40, category: 'food', weight: '150 g', img: 'https://images.unsplash.com/photo-1605333396914-256188435bf2?w=200&h=200&fit=crop', rating: 4.9, reviews: 1250, veg: true },
+  { id: 108, name: 'Haldirams Aloo Bhujia', price: 40, mrp: 40, category: 'food', weight: '150 g', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.9, reviews: 1250, veg: true },
   { id: 109, name: 'Cadbury Dairy Milk', price: 50, mrp: 50, category: 'food', weight: '50 g', img: 'https://images.unsplash.com/photo-1581798459219-318e76aecc7b?w=200&h=200&fit=crop', rating: 4.9, reviews: 2100, veg: true },
-  { id: 110, name: 'Maggi Cup Noodles', price: 50, mrp: 50, category: 'food', weight: '70 g', img: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=200&h=200&fit=crop', rating: 4.8, reviews: 1750, veg: true },
+  { id: 110, name: 'Maggi Cup Noodles', price: 50, mrp: 50, category: 'food', weight: '70 g', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.8, reviews: 1750, veg: true },
 
   // 2. Personal Care
-  { id: 201, name: 'Colgate Toothbrush', price: 30, mrp: 30, category: 'personal-care', weight: '1 Pc', img: 'https://images.unsplash.com/photo-1559150172-23fbeeb42817?w=200&h=200&fit=crop', rating: 4.6, reviews: 430 },
-  { id: 202, name: 'Pepsodent Toothpaste', price: 50, mrp: 50, category: 'personal-care', weight: '50 g', img: 'https://images.unsplash.com/photo-1629828458737-1c422998a129?w=200&h=200&fit=crop', rating: 4.7, reviews: 540 },
-  { id: 203, name: 'Dettol Soap', price: 35, mrp: 35, category: 'personal-care', weight: '75 g', img: 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=200&h=200&fit=crop', rating: 4.8, reviews: 890 },
-  { id: 204, name: 'Dove Shampoo Sachet', price: 5, mrp: 5, category: 'personal-care', weight: '1 Sachet', img: 'https://images.unsplash.com/photo-1585232336983-9e8a0471b15e?w=200&h=200&fit=crop', rating: 4.5, reviews: 320 },
+  { id: 201, name: 'Colgate Toothbrush', price: 30, mrp: 30, category: 'personal-care', weight: '1 Pc', img: '/images/prod_colgate.png', rating: 4.6, reviews: 430 },
+  { id: 202, name: 'Pepsodent Toothpaste', price: 50, mrp: 50, category: 'personal-care', weight: '50 g', img: '/images/prod_pepsodent.png', rating: 4.7, reviews: 540 },
+  { id: 203, name: 'Dettol Soap', price: 35, mrp: 35, category: 'personal-care', weight: '75 g', img: '/images/prod_dettol.png', rating: 4.8, reviews: 890 },
+  { id: 204, name: 'Dove Shampoo Sachet', price: 5, mrp: 5, category: 'personal-care', weight: '1 Sachet', img: '/images/prod_dove.png', rating: 4.5, reviews: 320 },
   { id: 205, name: 'Nivea Face Wash', price: 99, mrp: 99, category: 'personal-care', weight: '50 g', img: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=200&h=200&fit=crop', rating: 4.7, reviews: 650 },
-  { id: 206, name: 'Wet Wipes', price: 40, mrp: 40, category: 'personal-care', weight: '10 Wipes', img: 'https://images.unsplash.com/photo-1616684024163-4171050811e5?w=200&h=200&fit=crop', rating: 4.8, reviews: 1120 },
+  { id: 206, name: 'Wet Wipes', price: 40, mrp: 40, category: 'personal-care', weight: '10 Wipes', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.8, reviews: 1120 },
   { id: 207, name: 'Hand Sanitizer', price: 50, mrp: 50, category: 'personal-care', weight: '50 ml', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&h=200&fit=crop', rating: 4.9, reviews: 2000 },
-  { id: 208, name: 'Tissue Paper Pack', price: 30, mrp: 30, category: 'personal-care', weight: '1 Pack', img: 'https://images.unsplash.com/photo-1584555613497-9ecf9dd06f68?w=200&h=200&fit=crop', rating: 4.7, reviews: 450 },
+  { id: 208, name: 'Tissue Paper Pack', price: 30, mrp: 30, category: 'personal-care', weight: '1 Pack', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.7, reviews: 450 },
 
   // 3. Electronics
   { id: 301, name: 'Type-C Charging Cable', price: 150, mrp: 150, category: 'electronics', weight: '1 Pc', img: 'https://images.unsplash.com/photo-1585250481062-878848f07fcb?w=200&h=200&fit=crop', rating: 4.5, reviews: 670 },
@@ -69,7 +69,7 @@ const PRODUCTS = [
 
   // 5. Baby Care
   { id: 501, name: 'Baby Diapers (M) 5 Pcs', price: 120, mrp: 120, category: 'baby-care', weight: '5 Pcs', img: 'https://images.unsplash.com/photo-1515593532235-875f2066bca5?w=200&h=200&fit=crop', rating: 4.8, reviews: 560 },
-  { id: 502, name: 'Baby Wipes', price: 80, mrp: 80, category: 'baby-care', weight: '30 Wipes', img: 'https://images.unsplash.com/photo-1616684024163-4171050811e5?w=200&h=200&fit=crop', rating: 4.7, reviews: 340 },
+  { id: 502, name: 'Baby Wipes', price: 80, mrp: 80, category: 'baby-care', weight: '30 Wipes', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.7, reviews: 340 },
   { id: 503, name: 'Baby Powder', price: 60, mrp: 60, category: 'baby-care', weight: '50 g', img: 'https://images.unsplash.com/photo-1612276522714-f06b69e5d263?w=200&h=200&fit=crop', rating: 4.9, reviews: 210 },
 
   // 6. Health & Wellness
@@ -78,12 +78,12 @@ const PRODUCTS = [
   { id: 603, name: 'Pain Relief Spray', price: 145, mrp: 145, category: 'health', weight: '55 g', img: 'https://images.unsplash.com/photo-1628108425126-5b43a9d94943?w=200&h=200&fit=crop', rating: 4.9, reviews: 890 },
 
   // 7. Local Specials
-  { id: 701, name: 'Station Famous Sweets', price: 199, mrp: 199, category: 'local', weight: '250 g', img: 'https://images.unsplash.com/photo-1605333396914-256188435bf2?w=200&h=200&fit=crop', rating: 4.8, reviews: 540, veg: true },
+  { id: 701, name: 'Station Famous Sweets', price: 199, mrp: 199, category: 'local', weight: '250 g', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.8, reviews: 540, veg: true },
   { id: 702, name: 'Regional Snacks Mix', price: 99, mrp: 99, category: 'local', weight: '200 g', img: 'https://images.unsplash.com/photo-1599360889420-33230a133939?w=200&h=200&fit=crop', rating: 4.7, reviews: 320, veg: true },
 
   // 8. More Essentials
   { id: 801, name: 'Playing Cards', price: 50, mrp: 50, category: 'more', weight: '1 Pack', img: 'https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=200&h=200&fit=crop', rating: 4.6, reviews: 230 },
-  { id: 802, name: 'Disposable Cutlery Set', price: 30, mrp: 30, category: 'more', weight: '5 Pcs', img: 'https://images.unsplash.com/photo-1584555613497-9ecf9dd06f68?w=200&h=200&fit=crop', rating: 4.7, reviews: 150 },
+  { id: 802, name: 'Disposable Cutlery Set', price: 30, mrp: 30, category: 'more', weight: '5 Pcs', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.7, reviews: 150 },
   { id: 803, name: 'Safety Pins Pack', price: 20, mrp: 20, category: 'more', weight: '1 Pack', img: 'https://images.unsplash.com/photo-1610419359196-80db28859085?w=200&h=200&fit=crop', rating: 4.5, reviews: 100 }
 ];
 

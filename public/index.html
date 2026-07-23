@@ -2733,60 +2733,76 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
       <h3 style="font-size:16px; font-weight:800; color:var(--product-name-color, #ffffff); margin:0 0 16px 0; font-family:'Outfit',sans-serif;">Shop by Category</h3>
       <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px 8px;">
         
-        <div onclick="filterCategory('food', this); setRQCatByLabel('Food & Bev')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('food', this); setRQCatByLabel('Food & Bev')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&h=300&fit=crop" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Food &<br>Beverages</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Food &<br>Beverages</span>
+          </div>
         </div>
         
-        <div onclick="filterCategory('personal-care', this); setRQCatByLabel('Personal Care')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('personal-care', this); setRQCatByLabel('Personal Care')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_personal.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Personal<br>Care</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Personal<br>Care</span>
+          </div>
         </div>
 
-        <div onclick="filterCategory('electronics', this); setRQCatByLabel('Electronics')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('electronics', this); setRQCatByLabel('Electronics')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_electronics.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Electronics<br></span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Electronics</span>
+          </div>
         </div>
         
-        <div onclick="filterCategory('travel', this); setRQCatByLabel('Travel Ess.')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1598136490941-30d885318abd?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('travel', this); setRQCatByLabel('Travel Ess.')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_travel.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Travel<br>Essentials</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Travel<br>Essentials</span>
+          </div>
         </div>
         
-        <div onclick="filterCategory('baby-care', this); setRQCatByLabel('Baby Care')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('baby-care', this); setRQCatByLabel('Baby Care')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_baby.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Baby<br>Care</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Baby<br>Care</span>
+          </div>
         </div>
         
-        <div onclick="filterCategory('health', this); setRQCatByLabel('Health & Well')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('health', this); setRQCatByLabel('Health & Well')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_health.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Health &<br>Wellness</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Health &<br>Wellness</span>
+          </div>
         </div>
         
-        <div onclick="filterCategory('local', this); setRQCatByLabel('Local')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1605333396914-256188435bf2?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('local', this); setRQCatByLabel('Local')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_local.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">Local<br>Specials</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">Local<br>Specials</span>
+          </div>
         </div>
         
-        <div onclick="filterCategory('more', this); setRQCatByLabel('More')" style="display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-          <div style="width:100%; aspect-ratio:1; background:var(--img-capsule-bg); border:1px solid var(--border-color, rgba(255,255,255,0.05)); border-radius:16px; padding:6px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <img src="https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=120&h=120&fit=crop" style="max-width:92%; max-height:92%; object-fit:contain; border-radius:8px;">
+        <div onclick="filterCategory('more', this); setRQCatByLabel('More')" style="display:flex; flex-direction:column; cursor:pointer; border-radius:12px; overflow:hidden; background:#1C1C1E; border:1px solid rgba(255,255,255,0.05);">
+          <div style="width:100%; aspect-ratio:1.15; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <img src="/images/cat_more.png" style="width:100%; height:100%; object-fit:cover;">
           </div>
-          <span style="font-size:10px; font-weight:700; color:var(--product-name-color, rgba(255,255,255,0.9)); margin-top:6px; line-height:1.2; font-family:'Outfit',sans-serif; display:block; min-height:24px;">More<br>Essentials</span>
+          <div style="padding:8px 4px; display:flex; align-items:center; justify-content:center; min-height:46px; text-align:center;">
+            <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.95); line-height:1.2; font-family:'Outfit',sans-serif;">More<br>Essentials</span>
+          </div>
         </div>
         
       </div>
@@ -2804,8 +2820,19 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
         </button>
       </div>
       <!-- Grid Items (sectioned layout rendered via Javascript) -->
-      <div id="products-grid" style="padding-bottom:110px;"></div>
+      <div id="products-grid" style="padding-bottom:10px;"></div>
     </section>
+
+    <!-- Footer Section -->
+    <div style="padding: 24px 20px 110px 20px; background: var(--products-list-bg, #f4f4f4); display: flex; flex-direction: column; align-items: flex-start;">
+      <h1 style="font-family: 'Outfit', sans-serif; font-size: 44px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--product-name-color, #1a1a1a); margin: 0 0 32px 0;">
+        India's <span style="color: #5abf52;">train</span><br>delivery app 💚
+      </h1>
+      <hr style="width: 100%; border: none; border-top: 1px solid var(--border-color, rgba(0,0,0,0.1)); margin: 0 0 20px 0;">
+      <div style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--product-name-color, #1a1a1a);">
+        Rail<span style="color: #5abf52;">Quick</span>
+      </div>
+    </div>
   </div>
 
   <!-- ==================== CART PAGE ==================== -->
@@ -4150,7 +4177,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
     </div>
   </div>
 
-<script src="app.js?v=1.1"></script>
+<script src="app.js?v=1.5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
 </body>
