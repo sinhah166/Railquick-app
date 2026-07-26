@@ -14,6 +14,7 @@ let appState = {
   currentPage: 'page-pnr',
   user: null,
   cart: [],
+  wishlist: [],
   orders: [],
   pnrData: null,
   pnrLiveData: null,
@@ -48,8 +49,8 @@ const PRODUCTS = [
   // 2. Personal Care
   { id: 201, name: 'Colgate Toothbrush', price: 30, mrp: 30, category: 'personal-care', weight: '1 Pc', img: '/images/prod_colgate.png', rating: 4.6, reviews: 430 },
   { id: 202, name: 'Pepsodent Toothpaste', price: 50, mrp: 50, category: 'personal-care', weight: '50 g', img: '/images/prod_pepsodent.png', rating: 4.7, reviews: 540 },
-  { id: 203, name: 'Dettol Soap', price: 35, mrp: 35, category: 'personal-care', weight: '75 g', img: '/images/prod_dettol.png', rating: 4.8, reviews: 890 },
-  { id: 204, name: 'Dove Shampoo Sachet', price: 5, mrp: 5, category: 'personal-care', weight: '1 Sachet', img: '/images/prod_dove.png', rating: 4.5, reviews: 320 },
+  { id: 203, name: 'Dettol Soap', price: 35, mrp: 35, category: 'personal-care', weight: '75 g', img: '/images/dettol.png', rating: 4.8, reviews: 890 },
+  { id: 204, name: 'Dove Shampoo Sachet', price: 5, mrp: 5, category: 'personal-care', weight: '1 Sachet', img: '/images/dove.png', rating: 4.5, reviews: 320 },
   { id: 205, name: 'Nivea Face Wash', price: 99, mrp: 99, category: 'personal-care', weight: '50 g', img: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=200&h=200&fit=crop', rating: 4.7, reviews: 650 },
   { id: 206, name: 'Wet Wipes', price: 40, mrp: 40, category: 'personal-care', weight: '10 Wipes', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop', rating: 4.8, reviews: 1120 },
   { id: 207, name: 'Hand Sanitizer', price: 50, mrp: 50, category: 'personal-care', weight: '50 ml', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&h=200&fit=crop', rating: 4.9, reviews: 2000 },
@@ -187,6 +188,7 @@ function loadState() {
     const p = JSON.parse(saved);
     appState.user = p.user || null;
     appState.cart = Array.isArray(p.cart) ? p.cart : [];
+    appState.wishlist = Array.isArray(p.wishlist) ? p.wishlist : [];
     appState.orders = Array.isArray(p.orders) ? p.orders : [];
     appState.pnrData = p.pnrData || null;
     appState.pnrLiveData = p.pnrLiveData || null;
@@ -264,6 +266,7 @@ function navigateTo(pageId) {
   if (pageId === 'page-account') initAccountPage();
   if (pageId === 'page-checkout') initCheckoutPage();
   if (pageId === 'page-track-order') initTrackOrderPage();
+  if (pageId === 'page-wishlist') renderWishlistPage();
   const continueBar = document.getElementById('continue-bar');
   if (continueBar && pageId !== 'page-pnr') continueBar.classList.add('hidden');
   updateCartFAB();
@@ -2136,6 +2139,64 @@ function resetAppStateAndLogin() {
 }
 
 
+function toggleWishlist(productId) {
+  if (!appState.wishlist) appState.wishlist = [];
+  const idx = appState.wishlist.indexOf(productId);
+  const wasWishlisted = idx > -1;
+  if (wasWishlisted) {
+    appState.wishlist.splice(idx, 1);
+    showToast('Removed from wishlist');
+  } else {
+    appState.wishlist.push(productId);
+    showToast('❤️ Added to wishlist!', 'success');
+  }
+  saveState();
+
+  // Update ALL heart buttons for this product across all pages
+  const isNowWishlisted = !wasWishlisted;
+  document.querySelectorAll(`.product-card-premium[data-product-id="${productId}"]`).forEach(card => {
+    const heartBtn = card.querySelector('.wishlist-heart-btn');
+    if (heartBtn) {
+      heartBtn.style.color = isNowWishlisted ? '#ef4444' : '#ffffff';
+      heartBtn.style.background = isNowWishlisted ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.2)';
+      const heartIcon = heartBtn.querySelector('.material-symbols-outlined');
+      if (heartIcon) {
+        heartIcon.style.fontVariationSettings = isNowWishlisted ? "'FILL' 1" : "'FILL' 0";
+      }
+    }
+  });
+
+  // Re-render wishlist page if we're on it
+  if (appState.currentPage === 'page-wishlist') {
+    renderWishlistPage();
+  }
+}
+
+function renderWishlistPage() {
+  const container = document.getElementById('wishlist-grid');
+  if (!container) return;
+  const wishlistedProducts = PRODUCTS.filter(p => appState.wishlist && appState.wishlist.includes(p.id));
+  
+  if (wishlistedProducts.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 24px; text-align:center;">
+        <div style="width:80px; height:80px; background:#f3f4f6; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+          <span class="material-symbols-outlined" style="font-size:36px; color:#9ca3af;">favorite_border</span>
+        </div>
+        <h3 style="font-weight:800; color:#1f2937; font-size:18px; margin-bottom:8px; font-family:'Outfit',sans-serif;">Your wishlist is empty</h3>
+        <p style="font-size:13px; color:#6b7280; margin-bottom:20px; line-height:1.5;">Browse products and tap the ❤️ heart icon to save them here for later.</p>
+        <button style="background:#0C8346; color:white; padding:12px 24px; border-radius:12px; border:none; font-weight:700; font-size:13px; cursor:pointer;" onclick="navigateTo('page-shop')">Browse Products</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = wishlistedProducts.map(p => {
+    const inCart = appState.cart.find(c => c.id === p.id);
+    const qty = inCart ? inCart.qty : 0;
+    return getProductCardHTML(p, qty, `addToCart(${p.id})`, (delta) => `changeProductQty(${p.id},${delta})`, false);
+  }).join('');
+}
 
 function getProductCardHTML(p, qty, addClickCode, changeClickCodeFunc, isSlider = false) {
   const weightText = p.weight ? p.weight : 'Standard';
@@ -2157,8 +2218,12 @@ function getProductCardHTML(p, qty, addClickCode, changeClickCodeFunc, isSlider 
          <span style="width:5px;height:5px;background:#16a34a;border-radius:50%;display:block;"></span>
        </span>` : '';
 
-  const heartButton = `<button style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.2); border:none; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#ffffff; z-index:5;" onclick="event.stopPropagation(); this.classList.toggle('active'); this.style.color = this.classList.contains('active') ? '#ef4444' : '#ffffff';">
-    <span class="material-symbols-outlined" style="font-size:12px; font-variation-settings: 'FILL' 1;">favorite</span>
+  const isWishlisted = appState.wishlist && appState.wishlist.includes(p.id);
+  const heartColor = isWishlisted ? '#ef4444' : '#ffffff';
+  const heartBg = isWishlisted ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.2)';
+  const heartFill = isWishlisted ? "font-variation-settings:'FILL' 1;" : "font-variation-settings:'FILL' 0;";
+  const heartButton = `<button class="wishlist-heart-btn" style="position:absolute; top:6px; right:6px; background:${heartBg}; border:none; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:${heartColor}; z-index:5; transition: all 0.2s ease;" onclick="event.stopPropagation(); toggleWishlist(${p.id});">
+    <span class="material-symbols-outlined" style="font-size:14px;${heartFill}">favorite</span>
   </button>`;
 
   let optionsLabel = '';
@@ -3135,7 +3200,7 @@ function renderCheckoutMiniItems() {
               <div class="flex-grow min-w-0 py-0.5">
                 <h4 class="text-xs font-semibold text-gray-800 line-clamp-2 leading-tight">${item.name}</h4>
                 <p class="text-[11px] text-gray-400 mt-1">${item.weight || 'Standard'}</p>
-                <button class="text-[10px] text-gray-450 font-bold mt-2 hover:text-red-500 active:scale-95 transition-all" onclick="removeCheckoutCartItem(${item.id})">Move to wishlist</button>
+                <button class="text-[10px] text-gray-450 font-bold mt-2 hover:text-red-500 active:scale-95 transition-all" onclick="if(!appState.wishlist.includes(${item.id})) toggleWishlist(${item.id}); removeCheckoutCartItem(${item.id})">Move to wishlist</button>
               </div>
               <div class="flex flex-col items-end justify-between self-stretch shrink-0 py-0.5">
                 <div style="display:flex;align-items:center;background:#0C8346;border:1px solid #0C8346;border-radius:6px;overflow:hidden;height:26px;width:64px;">
@@ -4175,6 +4240,25 @@ async function handleOTPVerify() {
   }
 }
 
+function handleModalCarouselScroll(el) {
+  const scrollLeft = el.scrollLeft;
+  const width = el.clientWidth;
+  const activeIndex = Math.round(scrollLeft / width);
+  const dotsContainer = document.getElementById('modal-carousel-dots');
+  if (dotsContainer) {
+    const dots = dotsContainer.children;
+    for (let i = 0; i < dots.length; i++) {
+      if (i === activeIndex) {
+        dots[i].classList.replace('bg-black/20', 'bg-primary');
+        dots[i].classList.replace('w-1.5', 'w-3');
+      } else {
+        dots[i].classList.replace('bg-primary', 'bg-black/20');
+        dots[i].classList.replace('w-3', 'w-1.5');
+      }
+    }
+  }
+}
+
 // ===== PRODUCT MODAL DETAILS =====
 function openProductModal(productId) {
   const p = PRODUCTS.find(x => x.id === productId);
@@ -4184,8 +4268,22 @@ function openProductModal(productId) {
   const similar = getSimilarProducts(p, 5);
   const gallery = [p.img, ...similar.slice(0, 3).map(x => x.img)];
 
-  document.getElementById('modal-img').src = p.img;
-  document.getElementById('modal-img').onerror = function() { this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop'; };
+  const carouselEl = document.getElementById('modal-carousel');
+  const dotsContainer = document.getElementById('modal-carousel-dots');
+  
+  if (carouselEl && dotsContainer) {
+    carouselEl.innerHTML = gallery.map(src => `
+      <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-6">
+        <img src="${src}" class="max-h-full max-w-full object-contain drop-shadow-md" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop';" />
+      </div>
+    `).join('');
+    
+    dotsContainer.innerHTML = gallery.map((_, i) => `
+      <div class="h-1.5 rounded-full transition-all duration-300 ${i === 0 ? 'bg-primary w-3' : 'bg-black/20 w-1.5'}"></div>
+    `).join('');
+    
+    carouselEl.scrollLeft = 0;
+  }
   document.getElementById('modal-category').textContent = `${p.category.charAt(0).toUpperCase() + p.category.slice(1)} • ${productBadge(p)}`;
   document.getElementById('modal-name').textContent = p.name;
   document.getElementById('modal-price').innerHTML = `₹${p.price}`;
@@ -4200,7 +4298,6 @@ function openProductModal(productId) {
     tagsEl.insertAdjacentElement('afterend', extra);
   }
   extra.innerHTML = `
-    <div class="modal-gallery">${gallery.map(src => `<img src="${src}" onclick="document.getElementById('modal-img').src='${src}'" onerror="this.style.display='none'">`).join('')}</div>
     <div class="delivery-promise-card"><span class="material-symbols-outlined">verified</span><div><b>RailQuick delivery promise</b><p>Sealed pack, station-verified partner and direct seat handoff in 12-18 minutes.</p></div></div>
     <div class="modal-info-grid">
       <div class="modal-info-card"><b>Included</b><span>Product, sealed bag, invoice</span></div>

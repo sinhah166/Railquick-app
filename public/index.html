@@ -3455,7 +3455,7 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
       </div>
       
       <!-- Wishlist -->
-      <div style="display:flex;align-items:center;gap:16px;padding:16px 0;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:16px;padding:16px 0;cursor:pointer;" onclick="navigateTo('page-wishlist')">
         <span class="material-symbols-outlined" style="color:#fff;font-size:22px;">favorite_border</span>
         <span style="flex:1;font-size:14px;font-weight:600;color:#fff;">Your wishlist</span>
         <span class="material-symbols-outlined" style="color:rgba(255,255,255,0.3);font-size:18px;">chevron_right</span>
@@ -3477,6 +3477,20 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
       <button style="background:#1e2a14;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:12px 20px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="resetAppStateAndRestart()"><span class="material-symbols-outlined" style="font-size:16px;">restart_alt</span> Start Again / Reset App</button>
     </div>
   </div>
+  <!-- ==================== WISHLIST PAGE ==================== -->
+  <div id="page-wishlist" class="page bg-background">
+    <div class="sticky top-0 bg-white border-b border-outline-variant/60 px-5 py-4 flex justify-between items-center z-40 shadow-sm">
+      <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 text-primary active:scale-90 transition-transform" onclick="navigateTo('page-shop')">
+        <span class="material-symbols-outlined text-xl">arrow_back</span>
+      </button>
+      <h2 class="text-base font-headline font-bold text-on-surface">Your Wishlist</h2>
+      <div class="w-9 h-9"></div>
+    </div>
+    <div class="flex-1 overflow-y-auto px-4 pb-24 pt-4">
+      <div id="wishlist-grid" class="grid grid-cols-2 gap-3"></div>
+    </div>
+  </div>
+
   <!-- ==================== OFFERS & COUPONS PAGE ==================== -->
   <div id="page-offers" class="page bg-background">
     <div class="sticky top-0 bg-white border-b border-outline-variant/60 px-5 py-4 flex justify-between items-center z-40 shadow-sm">
@@ -3687,8 +3701,16 @@ input[type='text'], input[type='number'], input[type='tel'], input[type='date'] 
     <div class="modal-card bg-white rounded-t-[2rem] w-full max-w-[412px] max-h-[85vh] overflow-y-auto z-50 relative animate-fade-in-up" id="modal-card">
       <button class="modal-close w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-gray-600 absolute top-4 right-4 z-50" onclick="closeProductModal()">✕</button>
       
-      <div class="modal-img-wrapper bg-transparent h-52 w-full flex items-center justify-center p-6 relative">
-        <img id="modal-img" src="" alt="" class="max-h-full max-w-full object-contain" />
+      <div class="modal-img-wrapper bg-transparent h-52 w-full relative">
+        <div id="modal-carousel" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-none w-full h-full" onscroll="handleModalCarouselScroll(this)">
+          <!-- Images injected dynamically -->
+          <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-6">
+            <img id="modal-img" src="" alt="" class="max-h-full max-w-full object-contain" />
+          </div>
+        </div>
+        <div id="modal-carousel-dots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+          <!-- Dots injected dynamically -->
+        </div>
       </div>
       
       <div class="modal-body p-6">
